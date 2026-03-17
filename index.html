@@ -724,7 +724,6 @@ function openDetail(id) {
     ...(m.genero?m.genero.split(',').slice(0,3).map(g=>({t:g.trim()})):[]),
     ...(m.rating?[{t:'★'.repeat(m.rating)}]:[]),
   ].filter(c=>c.t);
-  document.getElementById('m-chips').innerHTML=chips.map(c=>`<span class="i-chip${c.hi?' hi':c.loc?' loc':''}">${esc(c.t)}</span>`).join('');
   document.getElementById('m-synopsis').textContent=m.sinopsis||'Sin sinopsis disponible.';
   if(m.reparto){document.getElementById('m-cast').textContent=m.reparto;document.getElementById('m-cast-sec').style.display='block';}
   else document.getElementById('m-cast-sec').style.display='none';
