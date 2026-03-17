@@ -330,10 +330,27 @@
       <button class="btn-back" onclick="goBack()"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></button>
       <h2>BUSCAR PELÍCULA</h2>
     </div>
-    <div class="search-bar">
-      <input type="text" id="tmdb-q" placeholder="Título de la película…" onkeydown="if(event.key==='Enter')doSearch()">
-      <button class="btn-buscar" onclick="doSearch()">Buscar</button>
+    <div class="search-bar" style="flex-direction:column;gap:8px">
+      <div style="display:flex;gap:9px;width:100%">
+        <input type="text" id="tmdb-q" placeholder="Título de la película…" onkeydown="if(event.key==='Enter')doSearch()" style="flex:1;height:44px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--rs);padding:0 14px;color:var(--text);font-family:var(--font);font-size:15px;outline:none">
+        <button class="btn-buscar" onclick="doSearch()">Buscar</button>
+      </div>
+      <div id="barcode-row" style="display:flex;gap:9px;width:100%;flex-wrap:wrap">
+        <input type="number" id="barcode-q" placeholder="Código de barras (números)…" onkeydown="if(event.key==='Enter')searchBarcode()" style="flex:1;min-width:160px;height:44px;background:var(--surface);border:1px solid var(--border2);border-radius:var(--rs);padding:0 14px;color:var(--text);font-family:var(--font);font-size:15px;outline:none">
+        <button class="btn-buscar" onclick="searchBarcode()" style="background:var(--surface2);color:var(--accent);border:1px solid var(--border2)">Buscar</button>
+        <button id="btn-cam" class="btn-buscar" onclick="startScan()" style="background:var(--accent);color:#000;display:none">
+          <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/></svg>
+        </button>
+      </div>
     </div>
+    <script>
+      // Show camera button only on mobile
+      if(/Mobi|Android/i.test(navigator.userAgent)){
+        document.getElementById('btn-cam').style.display='flex';
+        document.getElementById('btn-cam').style.alignItems='center';
+        document.getElementById('btn-cam').style.gap='6px';
+      }
+    </script>
     <div class="results" id="results"></div>
   </div>
 
@@ -552,14 +569,10 @@
       Colección
     </button>
     <div class="nav-scan-wrap">
-      <button class="nav-scan-btn" onclick="startScan()">
-        <svg width="25" height="25" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/></svg>
+      <button class="nav-scan-btn" id="nav-add" onclick="addManual()">
+        <svg width="25" height="25" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
       </button>
     </div>
-    <button class="nav-btn" id="nav-add" onclick="addManual()">
-      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-      Agregar
-    </button>
     <button class="nav-btn" id="nav-set" onclick="showScreen('settings')">
       <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       Ajustes
@@ -627,7 +640,7 @@ function showScreen(name) {
   ['collection','search','add','settings'].forEach(s=>
     document.getElementById(`screen-${s}`).classList.toggle('active',s===name));
   document.getElementById('nav-col').classList.toggle('active',name==='collection');
-  document.getElementById('nav-add').classList.toggle('active',name==='search');
+  if(document.getElementById('nav-add')) document.getElementById('nav-add').classList.toggle('active',name==='search');
   document.getElementById('nav-set').classList.toggle('active',name==='settings');
   if (name==='settings') updateStats();
 }
@@ -790,63 +803,85 @@ async function startScan(){
 }
 function stopScan(){if(reader)reader.reset();document.getElementById('screen-scanner').style.display='none';}
 
+// Limpia el título extraído de UPC para búsqueda
+function cleanUPCTitle(raw){
+  return raw
+    .replace(/\b(dvd|blu.?ray|4k uhd|4k|uhd|region \d|widescreen|fullscreen|special edition|collector|bilingual|subtitulada?|theatrical|widescreen edition|full screen|ws|fs|amaray|keepcase)\b/gi,'')
+    .replace(/\(?\d{4}\)?/g,'')
+    .replace(/[:\-]\s*$/,'')
+    .replace(/\s+/g,' ').trim();
+}
+
+// Búsqueda desde cámara
 async function lookupUPC(upc){
   document.getElementById('screen-scanner').style.display='none';
-  showScreen('search');toast(`Buscando código…`);
+  showScreen('search');
+  document.getElementById('barcode-q').value=upc;
+  await searchBarcode();
+}
+
+// Búsqueda manual por código de barras
+async function searchBarcode(){
+  const upc=document.getElementById('barcode-q').value.trim();
+  if(!upc){toast('Ingresa el código de barras');return;}
+  if(!S.tmdb){toast('Configura tu TMDB API Key');showScreen('settings');return;}
+  const el=document.getElementById('results');
+  el.innerHTML='<div class="spinner"></div>';
+  toast('Buscando código '+upc+'…');
   let title='';
+
+  // Fuente 1: UPC Item DB
   try{
     const r=await fetch(`https://api.upcitemdb.com/prod/trial/lookup?upc=${upc}`);
     const d=await r.json();
-    if(d.items?.[0]?.title)title=d.items[0].title.replace(/\b(dvd|blu.?ray|4k|uhd|region \d|widescreen|fullscreen|special edition|collector|bilingual|subtitulada?)\b/gi,'').replace(/\(?\d{4}\)?/g,'').replace(/\s+/g,' ').trim();
+    if(d.items?.[0]?.title) title=cleanUPCTitle(d.items[0].title);
   }catch(_){}
-  document.getElementById('tmdb-q').value=title;
-  if(title)await doSearch(title);
-  else{toast('No se identificó — ingresa el título');document.getElementById('tmdb-q').focus();}
+
+  // Fuente 2: Open Library
+  if(!title){
+    try{
+      const r=await fetch(`https://openlibrary.org/api/books?bibkeys=ISBN:${upc}&format=json&jscmd=data`);
+      const d=await r.json();
+      const key=Object.keys(d)[0];
+      if(key&&d[key]?.title) title=d[key].title;
+    }catch(_){}
+  }
+
+  // Fuente 3: Buscar directamente en TMDB por EAN/UPC como query
+  if(!title){
+    try{
+      const r=await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${S.tmdb}&query=${upc}&language=es-MX`);
+      const d=await r.json();
+      if(d.results?.length){renderResults(d.results);return;}
+    }catch(_){}
+  }
+
+  if(title){
+    document.getElementById('tmdb-q').value=title;
+    await doSearch(title);
+  } else {
+    el.innerHTML=`<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-h">Código no encontrado</div><div class="empty-p">Escribe el título arriba y toca Buscar</div></div>`;
+    document.getElementById('tmdb-q').focus();
+  }
 }
+
 
 /* ── TMDB ── */
 async function doSearch(override){
-  let q=typeof override==='string'?override:document.getElementById('tmdb-q').value.trim();
+  const q=typeof override==='string'?override:document.getElementById('tmdb-q').value.trim();
   if(!q){toast('Escribe el título');return;}
   if(!S.tmdb){toast('Configura tu TMDB API Key');showScreen('settings');return;}
   const el=document.getElementById('results');
   el.innerHTML='<div class="spinner"></div>';
-  // Si es solo números y más de 4 dígitos → tratar como código de barras
-  if(/^\d{5,}$/.test(q)){
-    toast('Buscando código '+q+'…');
-    try{
-      const r=await fetch(`https://api.upcitemdb.com/prod/trial/lookup?upc=${q}`);
-      const d=await r.json();
-      if(d.items?.[0]?.title){
-        q=d.items[0].title
-          .replace(/\b(dvd|blu.?ray|4k|uhd|region \d|widescreen|fullscreen|special edition|collector|bilingual|subtitulada?)\b/gi,'')
-          .replace(/\(?\d{4}\)?/g,'').replace(/\s+/g,' ').trim();
-        document.getElementById('tmdb-q').value=q;
-        toast('Título encontrado: '+q);
-      } else {
-        el.innerHTML=`<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-h">Código no encontrado</div><div class="empty-p">Intenta con el título de la película</div></div>`;
-        return;
-      }
-    }catch(e){
-      el.innerHTML=`<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-h">Error de conexión</div><div class="empty-p">Verifica tu internet</div></div>`;
-      return;
-    }
-  }
   try{
     let res=await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${S.tmdb}&query=${enc(q)}&language=es-MX&include_adult=false`);
     let data=await res.json();
-    if(!data.results?.length){res=await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${S.tmdb}&query=${enc(q)}&include_adult=false`);data=await res.json();}
+    if(!data.results?.length){
+      res=await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${S.tmdb}&query=${enc(q)}&include_adult=false`);
+      data=await res.json();
+    }
     renderResults(data.results||[]);
   }catch(e){el.innerHTML=`<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-h">Error</div><div class="empty-p">Verifica tu API Key e internet</div></div>`;}
-}
-function renderResults(list){
-  const el=document.getElementById('results');
-  if(!list.length){el.innerHTML=`<div class="empty-state"><div class="empty-icon">🎭</div><div class="empty-h">Sin resultados</div><div class="empty-p">Prueba con el título en inglés</div></div>`;return;}
-  el.innerHTML=list.slice(0,25).map(r=>{
-    const year=r.release_date?.slice(0,4)||'';
-    const thumb=r.poster_path?`<img class="result-thumb" src="https://image.tmdb.org/t/p/w92${r.poster_path}" alt="" loading="lazy">`:`<div class="result-thumb" style="display:flex;align-items:center;justify-content:center;font-size:22px">🎬</div>`;
-    return `<div class="result-item" onclick="selectMovie(${r.id})">${thumb}<div class="result-info"><div class="result-title">${esc(r.title)}</div>${r.original_title!==r.title?`<div class="result-sub italic">${esc(r.original_title)}</div>`:''}<div class="result-sub">${year}${r.vote_average?` · ★ ${r.vote_average.toFixed(1)}`:''}</div><div class="result-desc">${esc(r.overview||'')}</div></div><div class="result-arrow"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></div></div>`;
-  }).join('');
 }
 async function selectMovie(tmdbId){
   toast('Cargando información…');
