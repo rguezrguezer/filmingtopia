@@ -274,20 +274,22 @@
         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
         <input type="text" placeholder="Título, director, género…" id="col-search" oninput="filterCol()">
       </div>
-      <div class="view-toggle">
-        <button class="vt-btn active" id="vt-grid" onclick="setView('grid')" title="Cuadrícula">
-          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
-        </button>
-        <button class="vt-btn" id="vt-list" onclick="setView('list')" title="Lista">
-          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-        </button>
-      </div>
     </header>
     <div class="chips-bar" id="filter-chips">
       <button class="chip active" data-f="">Todo</button>
       <button class="chip" data-f="DVD">DVD</button>
       <button class="chip" data-f="Blu-ray">Blu-ray</button>
       <button class="chip" data-f="4K UHD">4K UHD</button>
+      <div style="margin-left:auto;flex-shrink:0;">
+        <div class="view-toggle">
+          <button class="vt-btn active" id="vt-grid" onclick="setView('grid')" title="Cuadrícula">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+          </button>
+          <button class="vt-btn" id="vt-list" onclick="setView('list')" title="Lista">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          </button>
+        </div>
+      </div>
     </div>
     <div class="count-bar" id="count-bar">0 películas</div>
     <div class="movie-grid" id="movie-grid"></div>
@@ -471,6 +473,10 @@
         <svg width="25" height="25" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/></svg>
       </button>
     </div>
+    <button class="nav-btn" id="nav-add" onclick="addManual()">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+      Agregar
+    </button>
     <button class="nav-btn" id="nav-set" onclick="showScreen('settings')">
       <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
       Ajustes
@@ -533,6 +539,7 @@ function showScreen(name) {
   ['collection','search','add','settings'].forEach(s=>
     document.getElementById(`screen-${s}`).classList.toggle('active',s===name));
   document.getElementById('nav-col').classList.toggle('active',name==='collection');
+  document.getElementById('nav-add').classList.toggle('active',name==='search');
   document.getElementById('nav-set').classList.toggle('active',name==='settings');
   if (name==='settings') updateStats();
 }
@@ -762,6 +769,13 @@ function updateStats(){document.getElementById('st-total').textContent=S.movies.
 function exportCSV(){const cols=['titulo','titulo_orig','ano','director','reparto','genero','formato','region','estante','repisa','rating','notas'];const rows=[cols.join(','),...S.movies.map(m=>cols.map(c=>`"${String(m[c]||'').replace(/"/g,'""')}"`).join(','))];const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob([rows.join('\n')],{type:'text/csv'})),download:'filmingtopia.csv'});a.click();toast('CSV exportado');}
 
 /* ── Utils ── */
+function addManual(){
+  S.pending=null;
+  document.getElementById('tmdb-q').value='';
+  document.getElementById('results').innerHTML='';
+  showScreen('search');
+  setTimeout(()=>document.getElementById('tmdb-q').focus(),300);
+}
 function saveLoc(){localStorage.setItem('cv_movies',JSON.stringify(S.movies));}
 function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
 function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
