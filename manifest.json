@@ -1,7 +1,7 @@
 {
-  "name": "CineVault",
-  "short_name": "CineVault",
-  "description": "Tu catálogo personal de DVDs y Blu-rays",
+  "name": "Filmingtopia",
+  "short_name": "Filmingtopia",
+  "description": "Tu filmoteca personal de DVDs y Blu-rays",
   "start_url": "/index.html",
   "display": "standalone",
   "background_color": "#0D1B2A",

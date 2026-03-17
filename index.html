@@ -7,8 +7,8 @@
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="apple-mobile-web-app-title" content="CineVault">
-  <title>CineVault</title>
+  <meta name="apple-mobile-web-app-title" content="Filmingtopia">
+  <title>Filmingtopia</title>
   <link rel="manifest" href="manifest.json">
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <style>
@@ -269,7 +269,7 @@
   <!-- ═══ COLECCIÓN ═══ -->
   <div id="screen-collection" class="screen active">
     <header class="app-hdr">
-      <span class="logo">CINE<em>VAULT</em></span>
+      <span class="logo">FILMING<em>topia</em></span>
       <div class="hdr-search">
         <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
         <input type="text" placeholder="Título, director, género…" id="col-search" oninput="filterCol()">
@@ -379,7 +379,7 @@
 
   <!-- ═══ AJUSTES ═══ -->
   <div id="screen-settings" class="screen">
-    <header class="app-hdr"><span class="logo">CINE<em>VAULT</em></span></header>
+    <header class="app-hdr"><span class="logo">FILMING<em>topia</em></span></header>
     <div class="settings-scroll">
       <div class="s-sec">
         <div class="s-title">Tu Colección</div>
@@ -427,7 +427,7 @@
         </button>
       </div>
       <div style="text-align:center;padding:14px 0 28px;color:var(--muted);font-size:11.5px;line-height:1.8">
-        CineVault v1.1 &nbsp;·&nbsp; Gratis, sin límites<br>
+        Filmingtopia v1.1 &nbsp;·&nbsp; Gratis, sin límites<br>
         Tus datos viven en tu Google Sheets personal
       </div>
     </div>
@@ -483,7 +483,7 @@
 <script src="https://unpkg.com/@zxing/library@0.20.0/umd/index.min.js"></script>
 <script>
 /* ══════════════════════════════════════
-   CINEVAULT v1.1
+   FILMINGTOPIA v1.1
 ══════════════════════════════════════ */
 const S = {
   movies:[], filtered:[],
@@ -759,7 +759,7 @@ async function syncUp(silent=false){
 /* ── Settings ── */
 function guardarConfig(){S.tmdb=document.getElementById('cfg-tmdb').value.trim();S.gas=document.getElementById('cfg-gas').value.trim();localStorage.setItem('cv_tmdb',S.tmdb);localStorage.setItem('cv_gas',S.gas);toast('✓ Configuración guardada');}
 function updateStats(){document.getElementById('st-total').textContent=S.movies.length;document.getElementById('st-dvd').textContent=S.movies.filter(m=>m.formato==='DVD').length;document.getElementById('st-br').textContent=S.movies.filter(m=>m.formato!=='DVD').length;}
-function exportCSV(){const cols=['titulo','titulo_orig','ano','director','reparto','genero','formato','region','estante','repisa','rating','notas'];const rows=[cols.join(','),...S.movies.map(m=>cols.map(c=>`"${String(m[c]||'').replace(/"/g,'""')}"`).join(','))];const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob([rows.join('\n')],{type:'text/csv'})),download:'cinevault.csv'});a.click();toast('CSV exportado');}
+function exportCSV(){const cols=['titulo','titulo_orig','ano','director','reparto','genero','formato','region','estante','repisa','rating','notas'];const rows=[cols.join(','),...S.movies.map(m=>cols.map(c=>`"${String(m[c]||'').replace(/"/g,'""')}"`).join(','))];const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob([rows.join('\n')],{type:'text/csv'})),download:'filmingtopia.csv'});a.click();toast('CSV exportado');}
 
 /* ── Utils ── */
 function saveLoc(){localStorage.setItem('cv_movies',JSON.stringify(S.movies));}
