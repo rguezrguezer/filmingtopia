@@ -1,11 +1,7 @@
-/* CineVault Service Worker v1.0 */
-const CACHE = 'cinevault-v1';
-const SHELL = ['/index.html'];
+/* Filmingtopia Service Worker — network-first */
+const CACHE = 'filmingtopia-v3';
 
 self.addEventListener('install', e => {
-  e.waitUntil(
-    caches.open(CACHE).then(c => c.addAll(SHELL).catch(() => {}))
-  );
   self.skipWaiting();
 });
 
@@ -21,22 +17,22 @@ self.addEventListener('activate', e => {
 self.addEventListener('fetch', e => {
   const url = e.request.url;
 
-  // Always network-first for external APIs (TMDB, UPC, Google)
+  // External APIs: always network only
   if (url.includes('themoviedb.org') || url.includes('upcitemdb.com') ||
-      url.includes('googleapis.com') || url.includes('script.google.com') ||
-      url.includes('fonts.g')) {
-    e.respondWith(
-      fetch(e.request).catch(() => caches.match(e.request))
-    );
+      url.includes('script.google.com') || url.includes('fonts.g') ||
+      url.includes('unpkg.com')) {
+    e.respondWith(fetch(e.request).catch(() => new Response('', {status: 503})));
     return;
   }
 
-  // Cache-first for app shell
+  // App shell: network-first, cache as fallback
   e.respondWith(
-    caches.match(e.request).then(cached => cached || fetch(e.request).then(res => {
-      const clone = res.clone();
-      caches.open(CACHE).then(c => c.put(e.request, clone));
-      return res;
-    }))
+    fetch(e.request, {cache: 'no-cache'})
+      .then(res => {
+        const clone = res.clone();
+        caches.open(CACHE).then(c => c.put(e.request, clone));
+        return res;
+      })
+      .catch(() => caches.match(e.request))
   );
 });

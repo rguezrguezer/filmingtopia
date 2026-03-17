@@ -554,11 +554,15 @@ const S = {
 document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('cfg-tmdb').value = S.tmdb;
   document.getElementById('cfg-gas').value  = S.gas;
-  const cached = localStorage.getItem('cv_movies');
-  if (cached) S.movies = JSON.parse(cached);
+  // Always load from Google Sheets if configured, fall back to local cache
   applyView(S.view, false);
   filterCol();
-  if (S.gas) syncDown(true);
+  if (S.gas) {
+    syncDown(true);
+  } else {
+    const cached = localStorage.getItem('cv_movies');
+    if (cached) { S.movies = JSON.parse(cached); filterCol(); }
+  }
   document.querySelectorAll('#filter-chips .chip').forEach(c => {
     c.addEventListener('click', () => {
       document.querySelectorAll('#filter-chips .chip').forEach(x => x.classList.remove('active'));
@@ -820,9 +824,20 @@ function saveMovie(){
 /* ── Cloud ── */
 async function syncDown(silent=false){
   if(!S.gas){if(!silent)toast('Configura la URL del backend primero');return;}
-  if(!silent)toast('Descargando desde la nube…');
-  try{const r=await fetch(S.gas,{redirect:'follow'});const movies=await r.json();if(Array.isArray(movies)&&movies.length){S.movies=movies;saveLoc();filterCol();if(!silent)toast(`✓ ${movies.length} películas sincronizadas`);}else if(!silent)toast('La hoja aún no tiene datos');}
-  catch(e){if(!silent)toast('Error de sincronización');}
+  if(!silent)toast('Actualizando…');
+  try{
+    const r=await fetch(S.gas+'?t='+Date.now(),{redirect:'follow',cache:'no-store'});
+    const movies=await r.json();
+    if(Array.isArray(movies)){
+      S.movies=movies;saveLoc();filterCol();
+      if(!silent&&movies.length)toast(`✓ ${movies.length} películas`);
+    } else if(!silent) toast('Sin datos en la nube');
+  } catch(e){
+    // On network error, fall back to local cache silently
+    if(!silent)toast('Sin conexión — usando datos locales');
+    const cached=localStorage.getItem('cv_movies');
+    if(cached){S.movies=JSON.parse(cached);filterCol();}
+  }
 }
 async function syncUp(silent=false){
   if(!S.gas){if(!silent)toast('Configura la URL del backend primero');return;}
