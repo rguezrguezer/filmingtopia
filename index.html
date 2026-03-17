@@ -707,33 +707,50 @@ function emptyHTML(isEmpty) {
 function openDetail(id) {
   const m=S.movies.find(x=>x.id===id); if(!m)return;
   S.selectedId=id;
+  // Backdrop
   const bdWrap=document.getElementById('modal-bd-wrap');
   if(m.backdrop||m.portada){bdWrap.innerHTML=`<img class="modal-bd" src="${m.backdrop||m.portada}" alt="" onerror="this.parentElement.innerHTML='<div class=no-bd-fallback></div>'"><div class="modal-bd-grad"></div>`;}
   else bdWrap.innerHTML=`<div class="no-bd-fallback"></div>`;
+  // Poster + título + año
   document.getElementById('modal-poster-el').innerHTML=m.portada?`<img class="modal-poster" src="${m.portada}" alt="" onclick="togglePoster(this)">`:`<div class="modal-poster-placeholder">🎬</div>`;
   document.getElementById('m-title').textContent=m.titulo;
   document.getElementById('m-orig').textContent=(m.titulo_orig&&m.titulo_orig!==m.titulo)?m.titulo_orig:'';
   document.getElementById('m-meta').textContent=m.ano||'';
-  const loc=[m.estante&&`Estante ${m.estante}`,m.repisa&&`Repisa ${m.repisa}`].filter(Boolean).join(' — ');
-  const chips=[
+  // Director + Tipo
+  if(m.director){
+    document.getElementById('m-director-name').textContent='Dir. '+m.director;
+    document.getElementById('m-tipo-lbl').textContent=m.tipo||'Película';
+    document.getElementById('m-director-row').style.display='block';
+  } else { document.getElementById('m-director-row').style.display='none'; }
+  // Formato + Región + Edición + Rating
+  const fmtChips=[
     {t:m.formato,hi:true},
-    {t:m.tipo||'Película'},
     {t:`Región ${m.region}`},
-    ...(m.edicion?[{t:m.edicion,ed:true}]:[]),
-    ...(loc?[{t:`📦 ${loc}`,loc:true}]:[]),
-    ...(m.genero?m.genero.split(',').slice(0,3).map(g=>({t:g.trim()})):[]),
+    ...(m.edicion&&m.edicion!=='R'?[{t:m.edicion,ed:true}]:[]),
     ...(m.rating?[{t:'★'.repeat(m.rating)}]:[]),
   ].filter(c=>c.t);
+  document.getElementById('m-fmt-chips').innerHTML=fmtChips.map(c=>`<span class="i-chip${c.hi?' hi':c.ed?' ed':''}">${esc(c.t)}</span>`).join('');
+  // Géneros
+  const genres=m.genero?m.genero.split(',').map(g=>g.trim()).filter(Boolean):[];
+  document.getElementById('m-genre-chips').innerHTML=genres.map(g=>`<span class="i-chip">${esc(g)}</span>`).join('');
+  // Ubicación
+  const loc=[m.estante&&`Estante ${m.estante}`,m.repisa&&`Repisa ${m.repisa}`].filter(Boolean).join(' — ');
+  if(loc){document.getElementById('m-loc-txt').textContent='📦 '+loc;document.getElementById('m-loc-row').style.display='block';}
+  else document.getElementById('m-loc-row').style.display='none';
+  // Sinopsis
   document.getElementById('m-synopsis').textContent=m.sinopsis||'Sin sinopsis disponible.';
+  // Reparto
   if(m.reparto){document.getElementById('m-cast').textContent=m.reparto;document.getElementById('m-cast-sec').style.display='block';}
   else document.getElementById('m-cast-sec').style.display='none';
+  // Ficha técnica
   const crewLines=[];
-  if(m.duracion) crewLines.push(`<b>Duración:</b> ${esc(m.duracion)}`);
+  if(m.duracion)  crewLines.push(`<b>Duración:</b> ${esc(m.duracion)}`);
   if(m.guionista) crewLines.push(`<b>Guionista:</b> ${esc(m.guionista)}`);
-  if(m.dop) crewLines.push(`<b>DOP:</b> ${esc(m.dop)}`);
-  if(m.ratio) crewLines.push(`<b>Aspect Ratio:</b> ${esc(m.ratio)}`);
+  if(m.dop)       crewLines.push(`<b>DOP:</b> ${esc(m.dop)}`);
+  if(m.ratio)     crewLines.push(`<b>Aspect Ratio:</b> ${esc(m.ratio)}`);
   if(crewLines.length){document.getElementById('m-crew').innerHTML=crewLines.join('<br>');document.getElementById('m-crew-sec').style.display='block';}
   else document.getElementById('m-crew-sec').style.display='none';
+  // Notas
   if(m.notas){document.getElementById('m-notes').textContent=m.notas;document.getElementById('m-notes-sec').style.display='block';}
   else document.getElementById('m-notes-sec').style.display='none';
   document.getElementById('modal-wrap').classList.add('open');
