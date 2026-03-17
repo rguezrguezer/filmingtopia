@@ -379,6 +379,22 @@
         <input class="finput" id="f-edicion" placeholder="Edición del Director, Coleccionista, Trilogía…" type="text">
       </div>
       <div class="fsec">
+        <div class="flabel">Duración</div>
+        <input class="finput" id="f-duracion" placeholder="Ej: 120 min" type="text">
+      </div>
+      <div class="fsec">
+        <div class="flabel">Guionista</div>
+        <input class="finput" id="f-guionista" placeholder="Nombre del guionista" type="text">
+      </div>
+      <div class="fsec">
+        <div class="flabel">DOP (Director de Fotografía)</div>
+        <input class="finput" id="f-dop" placeholder="Nombre del DOP" type="text">
+      </div>
+      <div class="fsec">
+        <div class="flabel">Aspect Ratio</div>
+        <input class="finput" id="f-ratio" placeholder="Ej: 2.39:1, 1.85:1, 16:9" type="text">
+      </div>
+      <div class="fsec">
         <div class="flabel">Ubicación Física</div>
         <div class="frow">
           <input class="finput" id="f-estante" placeholder="Estante  (A, 1, 2…)" type="text">
@@ -477,6 +493,10 @@
         <div class="sec-lbl">Sinopsis</div>
         <div class="synopsis" id="m-synopsis"></div>
         <div id="m-cast-sec" style="display:none"><div class="sec-lbl">Reparto</div><div class="synopsis" id="m-cast"></div></div>
+        <div id="m-crew-sec" style="display:none">
+          <div class="sec-lbl">Ficha Técnica</div>
+          <div id="m-crew" style="font-size:13px;color:var(--text2);line-height:1.9"></div>
+        </div>
         <div id="m-notes-sec" style="display:none"><div class="sec-lbl">Notas</div><div class="synopsis" id="m-notes"></div></div>
       </div>
       <div class="modal-actions">
@@ -575,7 +595,7 @@ function filterCol() {
   const q = document.getElementById('col-search').value.toLowerCase().trim();
   S.query = q;
   const list = S.movies.filter(m=>{
-    const mq=!q||m.titulo.toLowerCase().includes(q)||(m.director||'').toLowerCase().includes(q)||(m.genero||'').toLowerCase().includes(q);
+    const mq=!q||m.titulo.toLowerCase().includes(q)||(m.director||'').toLowerCase().includes(q)||(m.genero||'').toLowerCase().includes(q)||(m.reparto||'').toLowerCase().includes(q)||(m.guionista||'').toLowerCase().includes(q)||(m.dop||'').toLowerCase().includes(q)||(m.tipo||'').toLowerCase().includes(q)||(m.edicion||'').toLowerCase().includes(q);
     const chip=document.querySelector('#filter-chips .chip.active');
     const cat=chip?.dataset.cat||'all';
     const val=chip?.dataset.f||'';
@@ -661,6 +681,13 @@ function openDetail(id) {
   document.getElementById('m-synopsis').textContent=m.sinopsis||'Sin sinopsis disponible.';
   if(m.reparto){document.getElementById('m-cast').textContent=m.reparto;document.getElementById('m-cast-sec').style.display='block';}
   else document.getElementById('m-cast-sec').style.display='none';
+  const crewLines=[];
+  if(m.duracion) crewLines.push(`<b>Duración:</b> ${esc(m.duracion)}`);
+  if(m.guionista) crewLines.push(`<b>Guionista:</b> ${esc(m.guionista)}`);
+  if(m.dop) crewLines.push(`<b>DOP:</b> ${esc(m.dop)}`);
+  if(m.ratio) crewLines.push(`<b>Aspect Ratio:</b> ${esc(m.ratio)}`);
+  if(crewLines.length){document.getElementById('m-crew').innerHTML=crewLines.join('<br>');document.getElementById('m-crew-sec').style.display='block';}
+  else document.getElementById('m-crew-sec').style.display='none';
   if(m.notas){document.getElementById('m-notes').textContent=m.notas;document.getElementById('m-notes-sec').style.display='block';}
   else document.getElementById('m-notes-sec').style.display='none';
   document.getElementById('modal-wrap').classList.add('open');
@@ -767,6 +794,10 @@ function populateForm(m){
   document.querySelectorAll('#grp-region .btn-opt').forEach(b=>b.classList.toggle('sel',b.dataset.v===String(m.region||'1')));S.region=String(m.region||'1');
   document.querySelectorAll('#grp-tipo .btn-opt').forEach(b=>b.classList.toggle('sel',b.dataset.v===(m.tipo||'Película')));S.tipo=m.tipo||'Película';
   document.getElementById('f-edicion').value=m.edicion||'';
+  document.getElementById('f-duracion').value=m.duracion||'';
+  document.getElementById('f-guionista').value=m.guionista||'';
+  document.getElementById('f-dop').value=m.dop||'';
+  document.getElementById('f-ratio').value=m.ratio||'';
   S.rating=m.rating||0;updateStars();
 }
 function pick(type,btn){btn.parentElement.querySelectorAll('.btn-opt').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');if(type==='format')S.format=btn.dataset.v;if(type==='region')S.region=btn.dataset.v;if(type==='tipo')S.tipo=btn.dataset.v;}
@@ -774,7 +805,7 @@ function rate(n){S.rating=S.rating===n?0:n;updateStars();}
 function updateStars(){document.querySelectorAll('#stars .star').forEach(s=>s.classList.toggle('on',parseInt(s.dataset.v)<=S.rating));}
 function saveMovie(){
   if(!S.pending)return;
-  const m={...S.pending,titulo:document.getElementById('f-title').value.trim()||S.pending.titulo,formato:S.format,region:S.region,tipo:S.tipo,rating:S.rating,edicion:document.getElementById('f-edicion').value.trim(),estante:document.getElementById('f-estante').value.trim(),repisa:document.getElementById('f-repisa').value.trim(),notas:document.getElementById('f-notas').value.trim()};
+  const m={...S.pending,titulo:document.getElementById('f-title').value.trim()||S.pending.titulo,formato:S.format,region:S.region,tipo:S.tipo,rating:S.rating,edicion:document.getElementById('f-edicion').value.trim(),duracion:document.getElementById('f-duracion').value.trim(),guionista:document.getElementById('f-guionista').value.trim(),dop:document.getElementById('f-dop').value.trim(),ratio:document.getElementById('f-ratio').value.trim(),estante:document.getElementById('f-estante').value.trim(),repisa:document.getElementById('f-repisa').value.trim(),notas:document.getElementById('f-notas').value.trim()};
   const idx=S.movies.findIndex(x=>x.id===m.id);
   if(idx>=0)S.movies[idx]=m;else S.movies.unshift(m);
   saveLoc();filterCol();showScreen('collection');toast(`"${m.titulo}" guardada ✓`);S.pending=null;S.selectedId=null;
@@ -798,7 +829,7 @@ async function syncUp(silent=false){
 /* ── Settings ── */
 function guardarConfig(){S.tmdb=document.getElementById('cfg-tmdb').value.trim();S.gas=document.getElementById('cfg-gas').value.trim();localStorage.setItem('cv_tmdb',S.tmdb);localStorage.setItem('cv_gas',S.gas);toast('✓ Configuración guardada');}
 function updateStats(){document.getElementById('st-total').textContent=S.movies.length;document.getElementById('st-dvd').textContent=S.movies.filter(m=>m.formato==='DVD').length;document.getElementById('st-br').textContent=S.movies.filter(m=>m.formato!=='DVD').length;}
-function exportCSV(){const cols=['titulo','titulo_orig','ano','director','reparto','genero','formato','region','estante','repisa','rating','notas'];const rows=[cols.join(','),...S.movies.map(m=>cols.map(c=>`"${String(m[c]||'').replace(/"/g,'""')}"`).join(','))];const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob([rows.join('\n')],{type:'text/csv'})),download:'filmingtopia.csv'});a.click();toast('CSV exportado');}
+function exportCSV(){const cols=['titulo','titulo_orig','ano','director','reparto','guionista','dop','genero','duracion','ratio','formato','region','tipo','edicion','estante','repisa','rating','notas'];const rows=[cols.join(','),...S.movies.map(m=>cols.map(c=>`"${String(m[c]||'').replace(/"/g,'""')}"`).join(','))];const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob([rows.join('\n')],{type:'text/csv'})),download:'filmingtopia.csv'});a.click();toast('CSV exportado');}
 
 /* ── Utils ── */
 function changePoster(){
