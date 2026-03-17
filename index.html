@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#080C12">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="CineVault">
+  <title>CineVault</title>
+  <link rel="manifest" href="manifest.json">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #080C12;
+      --bg2:       #0E1520;
+      --surface:   #151E2D;
+      --surface2:  #1C2840;
+      --surface3:  #243252;
+      --accent:    #E8B84B;
+      --accent-lo: rgba(232,184,75,0.12);
+      --accent-md: rgba(232,184,75,0.25);
+      --danger:    #E05252;
+      --text:      #E8EEF6;
+      --text2:     #A8B8CC;
+      --muted:     #5E7490;
+      --border:    rgba(255,255,255,0.06);
+      --border2:   rgba(255,255,255,0.1);
+      --r:         16px;
+      --rs:        10px;
+      --nav:       70px;
+      --hdr:       56px;
+      --ease:      cubic-bezier(.4,0,.2,1);
+      --ease-out:  cubic-bezier(0,.55,.45,1);
+      --font:         'Outfit', sans-serif;
+      --font-display: 'Bebas Neue', cursive;
+    }
+
+    html, body {
+      height: 100%; overflow: hidden; background: var(--bg); color: var(--text);
+      font-family: var(--font); -webkit-font-smoothing: antialiased;
+      -webkit-tap-highlight-color: transparent; user-select: none;
+    }
+    #app { height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+
+    .screen { display: none; flex-direction: column; flex: 1; overflow: hidden; }
+    .screen.active { display: flex; }
+
+    /* ── Header ── */
+    .app-hdr {
+      height: var(--hdr); padding: 0 14px;
+      display: flex; align-items: center; gap: 9px;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg); flex-shrink: 0; z-index: 5;
+    }
+    .logo { font-family: var(--font-display); font-size: 24px; letter-spacing: 2.5px; color: var(--accent); flex-shrink: 0; line-height: 1; }
+    .logo em { color: var(--text); font-style: normal; }
+    .hdr-search {
+      flex: 1; height: 36px; background: var(--surface);
+      border: 1px solid var(--border2); border-radius: 10px;
+      display: flex; align-items: center; padding: 0 10px; gap: 7px; transition: border-color .2s;
+    }
+    .hdr-search:focus-within { border-color: rgba(232,184,75,.4); }
+    .hdr-search svg { color: var(--muted); flex-shrink: 0; }
+    .hdr-search input {
+      flex: 1; background: none; border: none; outline: none;
+      color: var(--text); font-family: var(--font); font-size: 14px;
+    }
+    .hdr-search input::placeholder { color: var(--muted); }
+
+    /* View toggle */
+    .view-toggle { display: flex; background: var(--surface); border: 1px solid var(--border2); border-radius: 9px; overflow: hidden; flex-shrink: 0; }
+    .vt-btn { width: 34px; height: 34px; background: none; border: none; cursor: pointer; color: var(--muted); display: flex; align-items: center; justify-content: center; transition: all .18s var(--ease); }
+    .vt-btn.active { background: var(--accent-md); color: var(--accent); }
+
+    /* ── Chips ── */
+    .chips-bar { display: flex; gap: 7px; padding: 10px 14px; overflow-x: auto; flex-shrink: 0; scrollbar-width: none; border-bottom: 1px solid var(--border); }
+    .chips-bar::-webkit-scrollbar { display: none; }
+    .chip { padding: 5px 14px; border-radius: 20px; border: 1px solid var(--border2); background: var(--surface); color: var(--muted); font-size: 12.5px; font-weight: 500; white-space: nowrap; cursor: pointer; transition: all .15s var(--ease); font-family: var(--font); }
+    .chip.active { background: var(--accent-lo); border-color: var(--accent); color: var(--accent); }
+    .count-bar { padding: 6px 15px 2px; font-size: 11.5px; color: var(--muted); font-weight: 500; flex-shrink: 0; }
+
+    /* ── GRID ── */
+    .movie-grid { flex: 1; overflow-y: auto; padding: 10px 10px 6px; display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; align-content: start; scrollbar-width: none; }
+    .movie-grid::-webkit-scrollbar { display: none; }
+    .movie-grid.hidden { display: none; }
+
+    .card { cursor: pointer; border-radius: 10px; overflow: hidden; background: var(--surface); position: relative; aspect-ratio: 2/3; transition: transform .15s var(--ease); }
+    .card:active { transform: scale(.94); }
+    .card img { width: 100%; height: 100%; object-fit: cover; display: block; }
+    .card-noposter { width: 100%; height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 8px; gap: 5px; text-align: center; background: var(--surface2); }
+    .card-noposter-icon { font-size: 24px; opacity: .2; }
+    .card-noposter-title { font-size: 9.5px; font-weight: 500; color: var(--muted); line-height: 1.3; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+    .card-overlay { position: absolute; bottom: 0; left: 0; right: 0; background: linear-gradient(to top, rgba(0,0,0,.92) 0%, rgba(0,0,0,.4) 60%, transparent 100%); padding: 20px 6px 6px; }
+    .card-title { font-size: 10px; font-weight: 600; line-height: 1.25; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+    .card-year { font-size: 9px; color: var(--text2); margin-top: 1px; }
+    .fmt-badge { position: absolute; top: 5px; left: 5px; font-size: 8px; font-weight: 700; padding: 2px 6px; border-radius: 4px; letter-spacing: .5px; text-transform: uppercase; backdrop-filter: blur(8px); }
+    .fmt-dvd { background: rgba(30,58,95,.85); color: #93C5FD; }
+    .fmt-br  { background: rgba(26,58,107,.85); color: #BAE6FD; }
+    .fmt-4k  { background: rgba(45,27,105,.85); color: #C4B5FD; }
+
+    /* ── LIST ── */
+    .movie-list { flex: 1; overflow-y: auto; scrollbar-width: none; }
+    .movie-list::-webkit-scrollbar { display: none; }
+    .movie-list.hidden { display: none; }
+
+    .list-alpha { padding: 5px 14px 3px; font-size: 10.5px; font-weight: 700; color: var(--accent); letter-spacing: 1.5px; text-transform: uppercase; background: var(--bg); position: sticky; top: 0; z-index: 2; border-bottom: 1px solid var(--border); }
+    .list-item { display: flex; align-items: center; gap: 13px; padding: 9px 14px; border-bottom: 1px solid var(--border); cursor: pointer; transition: background .12s var(--ease); }
+    .list-item:active { background: var(--surface); }
+    .list-thumb { width: 46px; height: 68px; border-radius: 6px; object-fit: cover; background: var(--surface); flex-shrink: 0; display: block; }
+    .list-thumb-ph { width: 46px; height: 68px; border-radius: 6px; background: var(--surface2); flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 20px; opacity: .5; }
+    .list-info { flex: 1; min-width: 0; }
+    .list-title { font-size: 14px; font-weight: 600; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .list-director { font-size: 12px; color: var(--text2); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .list-meta { display: flex; align-items: center; gap: 6px; margin-top: 5px; }
+    .list-year { font-size: 11.5px; color: var(--muted); }
+    .list-sep  { width: 3px; height: 3px; border-radius: 50%; background: var(--muted); }
+    .list-loc  { font-size: 11px; color: var(--muted); }
+    .list-fmt { font-size: 9px; font-weight: 700; padding: 2.5px 7px; border-radius: 4px; letter-spacing: .5px; text-transform: uppercase; flex-shrink: 0; }
+    .list-fmt.dvd { background: rgba(30,58,95,.6); color: #93C5FD; }
+    .list-fmt.br  { background: rgba(26,58,107,.6); color: #BAE6FD; }
+    .list-fmt.k4  { background: rgba(45,27,105,.6); color: #C4B5FD; }
+    .list-rating { font-size: 11px; color: var(--accent); flex-shrink: 0; letter-spacing: -1px; }
+    .list-arrow  { color: var(--muted); flex-shrink: 0; margin-left: 2px; }
+
+    /* ── Empty ── */
+    .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 70px 30px; gap: 10px; text-align: center; grid-column: 1 / -1; }
+    .empty-icon { font-size: 50px; opacity: .15; }
+    .empty-h { font-size: 17px; font-weight: 600; color: var(--text2); }
+    .empty-p { font-size: 13px; color: var(--muted); line-height: 1.7; }
+
+    /* ── Nav ── */
+    .nav { height: var(--nav); display: flex; align-items: stretch; border-top: 1px solid var(--border); background: var(--bg); flex-shrink: 0; padding-bottom: env(safe-area-inset-bottom); }
+    .nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; background: none; border: none; cursor: pointer; color: var(--muted); font-size: 10px; font-family: var(--font); font-weight: 500; transition: color .15s; }
+    .nav-btn.active { color: var(--accent); }
+    .nav-scan-wrap { flex: 1; display: flex; align-items: center; justify-content: center; }
+    .nav-scan-btn { width: 52px; height: 52px; border-radius: 50%; background: var(--accent); border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 6px var(--accent-lo), 0 4px 20px rgba(232,184,75,.35); transition: all .15s var(--ease); }
+    .nav-scan-btn:active { transform: scale(.9); box-shadow: 0 0 0 4px var(--accent-lo); }
+
+    /* ── Scanner ── */
+    #screen-scanner { position: fixed; inset: 0; z-index: 300; background: #000; display: none; flex-direction: column; }
+    #scanner-video { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; }
+    .scan-ui { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+    .scan-top { position: absolute; top: 0; left: 0; right: 0; padding: clamp(44px,11dvh,74px) 20px 0; text-align: center; }
+    .scan-top h2 { font-family: var(--font-display); font-size: 26px; letter-spacing: 2.5px; color: #fff; }
+    .scan-top p  { font-size: 13px; color: rgba(255,255,255,.6); margin-top: 5px; }
+    .scan-frame { width: 250px; height: 120px; position: relative; }
+    .scan-frame::before,.scan-frame::after,.corner-bl,.corner-br { content:''; position:absolute; width:24px; height:24px; border-color:var(--accent); border-style:solid; }
+    .scan-frame::before { top:0;left:0; border-width:3px 0 0 3px; border-radius:4px 0 0 0; }
+    .scan-frame::after  { top:0;right:0; border-width:3px 3px 0 0; border-radius:0 4px 0 0; }
+    .corner-bl { bottom:0;left:0; border-width:0 0 3px 3px; border-radius:0 0 0 4px; }
+    .corner-br { bottom:0;right:0; border-width:0 3px 3px 0; border-radius:0 0 4px 0; }
+    .scan-line { position:absolute; left:4px; right:4px; height:2px; background:linear-gradient(90deg,transparent,var(--accent),transparent); animation:scanBeam 2.2s ease-in-out infinite; top:4px; }
+    @keyframes scanBeam { 0%{top:4px}50%{top:calc(100% - 6px)}100%{top:4px} }
+    .scan-status { color: rgba(255,255,255,.7); font-size: 13.5px; margin-top: 22px; text-align: center; padding: 0 40px; line-height: 1.5; }
+    .scan-bottom { position:absolute; bottom:0; left:0; right:0; padding:16px 20px clamp(32px,6dvh,52px); display:flex; flex-direction:column; align-items:center; gap:10px; }
+    .btn-cancel-scan { padding:13px 44px; background:rgba(255,255,255,.12); border:1px solid rgba(255,255,255,.18); border-radius:30px; color:#fff; font-family:var(--font); font-size:15px; font-weight:500; cursor:pointer; backdrop-filter:blur(12px); }
+
+    /* ── Sub-screen header ── */
+    .screen-hdr { height:var(--hdr); display:flex; align-items:center; padding:0 14px; gap:10px; border-bottom:1px solid var(--border); flex-shrink:0; background:var(--bg); }
+    .screen-hdr h2 { font-family:var(--font-display); font-size:22px; letter-spacing:1.5px; flex:1; }
+    .btn-back { width:36px; height:36px; border-radius:50%; background:var(--surface); border:1px solid var(--border2); color:var(--text); cursor:pointer; display:flex; align-items:center; justify-content:center; flex-shrink:0; }
+
+    /* ── Search screen ── */
+    .search-bar { padding:12px 14px; flex-shrink:0; display:flex; gap:9px; }
+    .search-bar input { flex:1; height:44px; background:var(--surface); border:1px solid var(--border2); border-radius:var(--rs); padding:0 14px; color:var(--text); font-family:var(--font); font-size:15px; outline:none; transition:border-color .2s; }
+    .search-bar input:focus { border-color: rgba(232,184,75,.5); }
+    .btn-buscar { height:44px; padding:0 18px; background:var(--accent); border:none; border-radius:var(--rs); color:#000; font-family:var(--font); font-size:14.5px; font-weight:700; cursor:pointer; }
+    .results { flex:1; overflow-y:auto; scrollbar-width:none; }
+    .results::-webkit-scrollbar { display:none; }
+    .result-item { display:flex; gap:12px; padding:12px 14px; border-bottom:1px solid var(--border); cursor:pointer; transition:background .1s; }
+    .result-item:active { background:var(--surface); }
+    .result-thumb { width:50px; height:75px; border-radius:7px; object-fit:cover; background:var(--surface); flex-shrink:0; }
+    .result-info { flex:1; min-width:0; }
+    .result-title { font-size:14.5px; font-weight:600; line-height:1.25; }
+    .result-sub   { font-size:12px; color:var(--text2); margin-top:2px; }
+    .result-sub.italic { font-style:italic; }
+    .result-desc  { font-size:11.5px; color:var(--muted); margin-top:5px; line-height:1.45; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+    .result-arrow { display:flex; align-items:center; color:var(--muted); flex-shrink:0; }
+
+    /* ── Form ── */
+    .form-scroll { flex:1; overflow-y:auto; padding:15px; scrollbar-width:none; }
+    .form-scroll::-webkit-scrollbar { display:none; }
+    .movie-preview { display:flex; gap:13px; padding:14px; background:var(--surface); border:1px solid var(--border2); border-radius:var(--r); margin-bottom:20px; }
+    .preview-poster { width:66px; height:99px; border-radius:8px; object-fit:cover; background:var(--surface2); flex-shrink:0; }
+    .preview-info { flex:1; min-width:0; }
+    .preview-title { font-size:15.5px; font-weight:700; line-height:1.25; }
+    .preview-orig  { font-size:11px; color:var(--text2); font-style:italic; margin-top:2px; }
+    .preview-meta  { font-size:12px; color:var(--muted); margin-top:5px; }
+    .preview-genres { display:flex; flex-wrap:wrap; gap:4px; margin-top:8px; }
+    .g-tag { font-size:10.5px; padding:2px 9px; border-radius:10px; background:var(--surface2); color:var(--text2); border:1px solid var(--border2); }
+    .fsec { margin-bottom:18px; }
+    .flabel { font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-bottom:8px; }
+    .finput { width:100%; height:44px; background:var(--surface); border:1px solid var(--border2); border-radius:var(--rs); padding:0 13px; color:var(--text); font-family:var(--font); font-size:14px; outline:none; transition:border-color .2s; }
+    .finput:focus { border-color:rgba(232,184,75,.5); }
+    .frow { display:flex; gap:9px; }
+    .frow .finput { flex:1; }
+    .btn-grp { display:flex; gap:7px; }
+    .btn-opt { flex:1; height:42px; background:var(--surface); border:1.5px solid var(--border2); border-radius:var(--rs); color:var(--muted); font-family:var(--font); font-size:13.5px; font-weight:500; cursor:pointer; transition:all .15s var(--ease); }
+    .btn-opt.sel { background:var(--accent-lo); border-color:var(--accent); color:var(--accent); }
+    .stars { display:flex; gap:1px; }
+    .star { font-size:32px; cursor:pointer; background:none; border:none; padding:2px 4px; color:var(--surface3); transition:color .1s; line-height:1; }
+    .star.on { color:var(--accent); }
+    .btn-guardar { width:100%; height:50px; background:var(--accent); border:none; border-radius:var(--r); color:#000; font-family:var(--font); font-size:15px; font-weight:700; cursor:pointer; margin-top:6px; margin-bottom:16px; letter-spacing:.3px; }
+    .btn-guardar:disabled { opacity:.4; }
+
+    /* ── Modal ── */
+    .modal-wrap { display:none; position:fixed; inset:0; z-index:200; background:rgba(0,0,0,.75); backdrop-filter:blur(6px); }
+    .modal-wrap.open { display:flex; align-items:flex-end; }
+    .modal { width:100%; max-height:92dvh; background:var(--bg2); border-radius:22px 22px 0 0; overflow:hidden; display:flex; flex-direction:column; animation:sheetUp .26s var(--ease-out); }
+    @keyframes sheetUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+    .modal-handle { width:36px; height:4px; background:rgba(255,255,255,.15); border-radius:2px; margin:10px auto 0; flex-shrink:0; }
+    .modal-bd-wrap { position:relative; flex-shrink:0; }
+    .modal-bd { width:100%; height:165px; object-fit:cover; filter:brightness(.35); display:block; }
+    .modal-bd-grad { position:absolute; inset:0; background:linear-gradient(to bottom,transparent 20%,var(--bg2) 100%); }
+    .no-bd-fallback { height:72px; background:linear-gradient(to bottom,var(--surface),var(--bg2)); }
+    .modal-poster-row { display:flex; gap:14px; padding:0 14px; margin-top:-52px; position:relative; z-index:1; flex-shrink:0; }
+    .modal-poster { width:84px; height:126px; border-radius:10px; object-fit:cover; box-shadow:0 8px 28px rgba(0,0,0,.6); flex-shrink:0; }
+    .modal-poster-placeholder { width:84px; height:126px; border-radius:10px; background:var(--surface); display:flex; align-items:center; justify-content:center; font-size:30px; flex-shrink:0; box-shadow:0 8px 28px rgba(0,0,0,.4); }
+    .modal-titles { flex:1; padding-top:56px; min-width:0; }
+    .modal-title  { font-size:18px; font-weight:700; line-height:1.2; }
+    .modal-orig   { font-size:11.5px; color:var(--text2); font-style:italic; margin-top:2px; }
+    .modal-meta2  { font-size:12px; color:var(--muted); margin-top:3px; }
+    .modal-body { flex:1; overflow-y:auto; padding:14px; scrollbar-width:none; }
+    .modal-body::-webkit-scrollbar { display:none; }
+    .chips-row { display:flex; flex-wrap:wrap; gap:5px; margin-bottom:14px; }
+    .i-chip { padding:4px 12px; border-radius:20px; border:1px solid var(--border2); font-size:12px; color:var(--text2); background:var(--surface); }
+    .i-chip.hi  { border-color:var(--accent); color:var(--accent); background:var(--accent-lo); }
+    .i-chip.loc { border-color:rgba(100,180,120,.4); color:#86EFAC; background:rgba(100,180,120,.08); }
+    .sec-lbl { font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-bottom:6px; margin-top:14px; }
+    .synopsis { font-size:13.5px; line-height:1.7; color:var(--text2); }
+    .modal-actions { display:flex; gap:9px; padding:13px 14px; padding-bottom:calc(13px + env(safe-area-inset-bottom)); border-top:1px solid var(--border); flex-shrink:0; }
+    .btn-edit-m { flex:1; height:44px; background:var(--surface); border:1px solid var(--border2); border-radius:var(--rs); color:var(--text); font-family:var(--font); font-size:14px; font-weight:500; cursor:pointer; }
+    .btn-del { height:44px; width:44px; background:rgba(224,82,82,.1); border:1px solid rgba(224,82,82,.25); border-radius:var(--rs); color:var(--danger); cursor:pointer; display:flex; align-items:center; justify-content:center; }
+
+    /* ── Settings ── */
+    .settings-scroll { flex:1; overflow-y:auto; padding:16px; scrollbar-width:none; }
+    .settings-scroll::-webkit-scrollbar { display:none; }
+    .s-sec { margin-bottom:24px; }
+    .s-title { font-family:var(--font-display); font-size:20px; letter-spacing:1.5px; color:var(--accent); margin-bottom:10px; }
+    .s-card { background:var(--surface); border:1px solid var(--border2); border-radius:var(--r); overflow:hidden; }
+    .s-row { padding:13px 15px; border-bottom:1px solid var(--border); }
+    .s-row:last-child { border-bottom:none; }
+    .s-row-label { font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.8px; color:var(--muted); margin-bottom:6px; }
+    .s-input { width:100%; background:var(--surface2); border:1px solid var(--border2); border-radius:var(--rs); padding:10px 12px; color:var(--text); font-family:var(--font); font-size:13.5px; outline:none; transition:border-color .2s; }
+    .s-input:focus { border-color:rgba(232,184,75,.5); }
+    .s-hint { font-size:11.5px; color:var(--muted); margin-top:5px; line-height:1.6; }
+    .s-hint a { color:var(--accent); text-decoration:none; }
+    .btn-action { width:100%; height:44px; background:var(--surface); border:1px solid var(--border2); border-radius:var(--rs); color:var(--text); font-family:var(--font); font-size:13.5px; font-weight:500; cursor:pointer; display:flex; align-items:center; justify-content:center; gap:8px; margin-top:7px; transition:background .12s; }
+    .btn-action:active { background:var(--surface2); }
+    .stats-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:9px; }
+    .stat { background:var(--surface); border:1px solid var(--border2); border-radius:var(--rs); padding:14px; text-align:center; }
+    .stat-n { font-family:var(--font-display); font-size:36px; color:var(--accent); line-height:1; }
+    .stat-l { font-size:10px; color:var(--muted); margin-top:2px; font-weight:500; letter-spacing:.3px; }
+
+    /* ── Utils ── */
+    .spinner { width:26px; height:26px; border:3px solid var(--surface2); border-top-color:var(--accent); border-radius:50%; animation:spin .65s linear infinite; margin:48px auto; }
+    @keyframes spin { to { transform:rotate(360deg); } }
+    .toast { position:fixed; bottom:calc(var(--nav) + 14px); left:50%; transform:translateX(-50%) translateY(12px); background:var(--surface2); border:1px solid var(--border2); color:var(--text); padding:11px 20px; border-radius:30px; font-size:13.5px; font-weight:500; opacity:0; pointer-events:none; transition:all .22s var(--ease); z-index:9999; max-width:88vw; text-align:center; line-height:1.4; backdrop-filter:blur(14px); }
+    .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <!-- ═══ COLECCIÓN ═══ -->
+  <div id="screen-collection" class="screen active">
+    <header class="app-hdr">
+      <span class="logo">CINE<em>VAULT</em></span>
+      <div class="hdr-search">
+        <svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        <input type="text" placeholder="Título, director, género…" id="col-search" oninput="filterCol()">
+      </div>
+      <div class="view-toggle">
+        <button class="vt-btn active" id="vt-grid" onclick="setView('grid')" title="Cuadrícula">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        </button>
+        <button class="vt-btn" id="vt-list" onclick="setView('list')" title="Lista">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        </button>
+      </div>
+    </header>
+    <div class="chips-bar" id="filter-chips">
+      <button class="chip active" data-f="">Todo</button>
+      <button class="chip" data-f="DVD">DVD</button>
+      <button class="chip" data-f="Blu-ray">Blu-ray</button>
+      <button class="chip" data-f="4K UHD">4K UHD</button>
+    </div>
+    <div class="count-bar" id="count-bar">0 películas</div>
+    <div class="movie-grid" id="movie-grid"></div>
+    <div class="movie-list" id="movie-list"></div>
+  </div>
+
+  <!-- ═══ SCANNER ═══ -->
+  <div id="screen-scanner" style="position:fixed;inset:0;z-index:300;background:#000;display:none;flex-direction:column;">
+    <video id="scanner-video" autoplay playsinline muted></video>
+    <div class="scan-ui">
+      <div class="scan-top"><h2>ESCANEAR CÓDIGO</h2><p>Apunta al código de barras del DVD o Blu-ray</p></div>
+      <div class="scan-frame"><div class="corner-bl"></div><div class="corner-br"></div><div class="scan-line"></div></div>
+      <div class="scan-status" id="scan-status">Buscando código de barras…</div>
+      <div class="scan-bottom"><button class="btn-cancel-scan" onclick="stopScan()">Cancelar</button></div>
+    </div>
+  </div>
+
+  <!-- ═══ BÚSQUEDA TMDB ═══ -->
+  <div id="screen-search" class="screen">
+    <div class="screen-hdr">
+      <button class="btn-back" onclick="goBack()"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></button>
+      <h2>BUSCAR PELÍCULA</h2>
+    </div>
+    <div class="search-bar">
+      <input type="text" id="tmdb-q" placeholder="Título de la película…" onkeydown="if(event.key==='Enter')doSearch()">
+      <button class="btn-buscar" onclick="doSearch()">Buscar</button>
+    </div>
+    <div class="results" id="results"></div>
+  </div>
+
+  <!-- ═══ AGREGAR / EDITAR ═══ -->
+  <div id="screen-add" class="screen">
+    <div class="screen-hdr">
+      <button class="btn-back" onclick="goBack()"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg></button>
+      <h2 id="add-title">AGREGAR</h2>
+    </div>
+    <div class="form-scroll">
+      <div class="movie-preview">
+        <img id="f-poster" class="preview-poster" src="" alt="" style="display:none">
+        <div id="f-poster-ph" class="preview-poster" style="display:flex;align-items:center;justify-content:center;font-size:28px;background:var(--surface2)">🎬</div>
+        <div class="preview-info">
+          <div class="preview-title" id="f-title"></div>
+          <div class="preview-orig"  id="f-orig"></div>
+          <div class="preview-meta"  id="f-meta"></div>
+          <div class="preview-genres" id="f-genres"></div>
+        </div>
+      </div>
+      <div class="fsec">
+        <div class="flabel">Formato</div>
+        <div class="btn-grp" id="grp-format">
+          <button class="btn-opt sel" data-v="DVD"    onclick="pick('format',this)">DVD</button>
+          <button class="btn-opt"     data-v="Blu-ray" onclick="pick('format',this)">Blu-ray</button>
+          <button class="btn-opt"     data-v="4K UHD"  onclick="pick('format',this)">4K UHD</button>
+        </div>
+      </div>
+      <div class="fsec">
+        <div class="flabel">Región del disco</div>
+        <div class="btn-grp" id="grp-region">
+          <button class="btn-opt sel" data-v="1" onclick="pick('region',this)">1</button>
+          <button class="btn-opt"     data-v="2" onclick="pick('region',this)">2</button>
+          <button class="btn-opt"     data-v="3" onclick="pick('region',this)">3</button>
+          <button class="btn-opt"     data-v="4" onclick="pick('region',this)">4</button>
+        </div>
+      </div>
+      <div class="fsec">
+        <div class="flabel">Ubicación Física</div>
+        <div class="frow">
+          <input class="finput" id="f-estante" placeholder="Estante  (A, 1, 2…)" type="text">
+          <input class="finput" id="f-repisa"  placeholder="Repisa  (1, 2, 3…)" type="text">
+        </div>
+      </div>
+      <div class="fsec">
+        <div class="flabel">Mi calificación</div>
+        <div class="stars" id="stars">
+          <button class="star" data-v="1" onclick="rate(1)">★</button>
+          <button class="star" data-v="2" onclick="rate(2)">★</button>
+          <button class="star" data-v="3" onclick="rate(3)">★</button>
+          <button class="star" data-v="4" onclick="rate(4)">★</button>
+          <button class="star" data-v="5" onclick="rate(5)">★</button>
+        </div>
+      </div>
+      <div class="fsec">
+        <div class="flabel">Notas (opcional)</div>
+        <input class="finput" id="f-notas" placeholder="Edición especial, condición del disco…" type="text">
+      </div>
+      <button class="btn-guardar" onclick="saveMovie()">Guardar en Colección</button>
+    </div>
+  </div>
+
+  <!-- ═══ AJUSTES ═══ -->
+  <div id="screen-settings" class="screen">
+    <header class="app-hdr"><span class="logo">CINE<em>VAULT</em></span></header>
+    <div class="settings-scroll">
+      <div class="s-sec">
+        <div class="s-title">Tu Colección</div>
+        <div class="stats-grid">
+          <div class="stat"><div class="stat-n" id="st-total">0</div><div class="stat-l">TOTAL</div></div>
+          <div class="stat"><div class="stat-n" id="st-dvd">0</div><div class="stat-l">DVD</div></div>
+          <div class="stat"><div class="stat-n" id="st-br">0</div><div class="stat-l">BLU-RAY / 4K</div></div>
+        </div>
+      </div>
+      <div class="s-sec">
+        <div class="s-title">Configuración</div>
+        <div class="s-card">
+          <div class="s-row">
+            <div class="s-row-label">TMDB API Key</div>
+            <input class="s-input" id="cfg-tmdb" type="text" placeholder="Pega tu API Key aquí">
+            <div class="s-hint">Gratis en <a href="https://www.themoviedb.org/settings/api" target="_blank">themoviedb.org</a> → Cuenta → API → Developer</div>
+          </div>
+          <div class="s-row">
+            <div class="s-row-label">Google Apps Script URL</div>
+            <input class="s-input" id="cfg-gas" type="text" placeholder="https://script.google.com/macros/s/…/exec">
+            <div class="s-hint">Ver archivo <strong>gas-backend.gs</strong> para instrucciones</div>
+          </div>
+        </div>
+        <button class="btn-action" onclick="guardarConfig()">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v14a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+          Guardar Configuración
+        </button>
+      </div>
+      <div class="s-sec">
+        <div class="s-title">Sincronización</div>
+        <button class="btn-action" onclick="syncDown()">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg>
+          Descargar desde Google Sheets
+        </button>
+        <button class="btn-action" onclick="syncUp()">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/></svg>
+          Subir colección a Google Sheets
+        </button>
+      </div>
+      <div class="s-sec">
+        <div class="s-title">Exportar</div>
+        <button class="btn-action" onclick="exportCSV()">
+          <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          Exportar como CSV
+        </button>
+      </div>
+      <div style="text-align:center;padding:14px 0 28px;color:var(--muted);font-size:11.5px;line-height:1.8">
+        CineVault v1.1 &nbsp;·&nbsp; Gratis, sin límites<br>
+        Tus datos viven en tu Google Sheets personal
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ MODAL DETALLE ═══ -->
+  <div class="modal-wrap" id="modal-wrap" onclick="closeModalOutside(event)">
+    <div class="modal">
+      <div class="modal-handle"></div>
+      <div id="modal-bd-wrap" class="modal-bd-wrap"></div>
+      <div class="modal-poster-row">
+        <div id="modal-poster-el"></div>
+        <div class="modal-titles">
+          <div class="modal-title" id="m-title"></div>
+          <div class="modal-orig"  id="m-orig"></div>
+          <div class="modal-meta2" id="m-meta"></div>
+        </div>
+      </div>
+      <div class="modal-body">
+        <div class="chips-row" id="m-chips"></div>
+        <div class="sec-lbl">Sinopsis</div>
+        <div class="synopsis" id="m-synopsis"></div>
+        <div id="m-cast-sec" style="display:none"><div class="sec-lbl">Reparto</div><div class="synopsis" id="m-cast"></div></div>
+        <div id="m-notes-sec" style="display:none"><div class="sec-lbl">Notas</div><div class="synopsis" id="m-notes"></div></div>
+      </div>
+      <div class="modal-actions">
+        <button class="btn-edit-m" onclick="editMovie()">✏️ Editar</button>
+        <button class="btn-del"    onclick="deleteMovie()"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ NAV ═══ -->
+  <nav class="nav">
+    <button class="nav-btn active" id="nav-col" onclick="showScreen('collection')">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="2" y="7" width="3" height="13" rx="1"/><rect x="7.5" y="3" width="3" height="17" rx="1"/><rect x="13" y="7" width="3" height="13" rx="1"/><rect x="18.5" y="5" width="3.5" height="14" rx="1"/></svg>
+      Colección
+    </button>
+    <div class="nav-scan-wrap">
+      <button class="nav-scan-btn" onclick="startScan()">
+        <svg width="25" height="25" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><line x1="7" y1="12" x2="17" y2="12"/></svg>
+      </button>
+    </div>
+    <button class="nav-btn" id="nav-set" onclick="showScreen('settings')">
+      <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Ajustes
+    </button>
+  </nav>
+
+  <div class="toast" id="toast"></div>
+</div>
+
+<script src="https://unpkg.com/@zxing/library@0.20.0/umd/index.min.js"></script>
+<script>
+/* ══════════════════════════════════════
+   CINEVAULT v1.1
+══════════════════════════════════════ */
+const S = {
+  movies:[], filtered:[],
+  activeFilter:'', query:'',
+  view: localStorage.getItem('cv_view')||'grid',
+  screen:'collection', prev:'collection',
+  pending:null, selectedId:null,
+  format:'DVD', region:'1', rating:0,
+  tmdb: localStorage.getItem('cv_tmdb')||'',
+  gas:  localStorage.getItem('cv_gas') ||'',
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('cfg-tmdb').value = S.tmdb;
+  document.getElementById('cfg-gas').value  = S.gas;
+  const cached = localStorage.getItem('cv_movies');
+  if (cached) S.movies = JSON.parse(cached);
+  applyView(S.view, false);
+  filterCol();
+  if (S.gas) syncDown(true);
+  document.querySelectorAll('#filter-chips .chip').forEach(c => {
+    c.addEventListener('click', () => {
+      document.querySelectorAll('#filter-chips .chip').forEach(x => x.classList.remove('active'));
+      c.classList.add('active');
+      S.activeFilter = c.dataset.f;
+      filterCol();
+    });
+  });
+  if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(()=>{});
+});
+
+/* ── View ── */
+function setView(v) { S.view=v; localStorage.setItem('cv_view',v); applyView(v,true); }
+function applyView(v,render) {
+  document.getElementById('vt-grid').classList.toggle('active', v==='grid');
+  document.getElementById('vt-list').classList.toggle('active', v==='list');
+  document.getElementById('movie-grid').classList.toggle('hidden', v!=='grid');
+  document.getElementById('movie-list').classList.toggle('hidden', v!=='list');
+  if (render) filterCol();
+}
+
+/* ── Nav ── */
+function showScreen(name) {
+  document.getElementById('screen-scanner').style.display='none';
+  if (name==='scanner'){document.getElementById('screen-scanner').style.display='flex';return;}
+  S.prev=S.screen; S.screen=name;
+  ['collection','search','add','settings'].forEach(s=>
+    document.getElementById(`screen-${s}`).classList.toggle('active',s===name));
+  document.getElementById('nav-col').classList.toggle('active',name==='collection');
+  document.getElementById('nav-set').classList.toggle('active',name==='settings');
+  if (name==='settings') updateStats();
+}
+function goBack(){showScreen(S.prev||'collection');}
+
+/* ── Render ── */
+function filterCol() {
+  const q = document.getElementById('col-search').value.toLowerCase().trim();
+  S.query = q;
+  const list = S.movies.filter(m=>{
+    const mq=!q||m.titulo.toLowerCase().includes(q)||(m.director||'').toLowerCase().includes(q)||(m.genero||'').toLowerCase().includes(q);
+    const mf=!S.activeFilter||m.formato===S.activeFilter;
+    return mq&&mf;
+  });
+  S.filtered=list;
+  const n=S.movies.length, s=list.length;
+  document.getElementById('count-bar').textContent=(q||S.activeFilter)?`${s} de ${n} películas`:`${n} película${n!==1?'s':''}`;
+  renderGrid(list);
+  renderList(list);
+}
+
+function renderGrid(list) {
+  const g=document.getElementById('movie-grid');
+  if(!list.length){g.innerHTML=emptyHTML(S.movies.length===0);return;}
+  g.innerHTML=list.map(m=>{
+    const img=m.portada?`<img src="${m.portada}" alt="" loading="lazy" onerror="this.outerHTML='<div class=card-noposter><div class=card-noposter-icon>🎬</div></div>'">`:`<div class="card-noposter"><div class="card-noposter-icon">🎬</div><div class="card-noposter-title">${esc(m.titulo)}</div></div>`;
+    const badge=m.formato==='4K UHD'?'<span class="fmt-badge fmt-4k">4K</span>':m.formato==='Blu-ray'?'<span class="fmt-badge fmt-br">BD</span>':'<span class="fmt-badge fmt-dvd">DVD</span>';
+    return `<div class="card" onclick="openDetail('${m.id}')">${img}${badge}<div class="card-overlay"><div class="card-title">${esc(m.titulo)}</div><div class="card-year">${m.ano||''}</div></div></div>`;
+  }).join('');
+}
+
+function renderList(list) {
+  const el=document.getElementById('movie-list');
+  if(!list.length){el.innerHTML=`<div style="padding:0 0 6px">${emptyHTML(S.movies.length===0)}</div>`;return;}
+  const sorted=[...list].sort((a,b)=>a.titulo.localeCompare(b.titulo,'es'));
+  let html='',cur='';
+  sorted.forEach(m=>{
+    const L=m.titulo[0].toUpperCase();
+    if(L!==cur){cur=L;html+=`<div class="list-alpha">${L}</div>`;}
+    const loc=[m.estante&&`Est. ${m.estante}`,m.repisa&&`Rep. ${m.repisa}`].filter(Boolean).join(' · ');
+    const fc=m.formato==='4K UHD'?'k4':m.formato==='Blu-ray'?'br':'dvd';
+    const fl=m.formato==='4K UHD'?'4K':m.formato==='Blu-ray'?'BD':'DVD';
+    const stars=m.rating?'★'.repeat(m.rating):'';
+    const thumb=m.portada?`<img class="list-thumb" src="${m.portada}" alt="" loading="lazy" onerror="this.outerHTML='<div class=list-thumb-ph>🎬</div>'">`:`<div class="list-thumb-ph">🎬</div>`;
+    html+=`<div class="list-item" onclick="openDetail('${m.id}')">
+      ${thumb}
+      <div class="list-info">
+        <div class="list-title">${esc(m.titulo)}</div>
+        <div class="list-director">${esc(m.director||'—')}</div>
+        <div class="list-meta">
+          <span class="list-year">${m.ano||''}</span>
+          ${loc?`<span class="list-sep"></span><span class="list-loc">📦 ${esc(loc)}</span>`:''}
+        </div>
+      </div>
+      ${stars?`<span class="list-rating">${stars}</span>`:''}
+      <span class="list-fmt ${fc}">${fl}</span>
+      <span class="list-arrow"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></span>
+    </div>`;
+  });
+  el.innerHTML=html;
+}
+
+function emptyHTML(isEmpty) {
+  return isEmpty
+    ? `<div class="empty-state"><div class="empty-icon">🎬</div><div class="empty-h">Colección vacía</div><div class="empty-p">Toca el botón ⊕ para agregar tu primera película</div></div>`
+    : `<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-h">Sin resultados</div><div class="empty-p">Ninguna película coincide</div></div>`;
+}
+
+/* ── Modal ── */
+function openDetail(id) {
+  const m=S.movies.find(x=>x.id===id); if(!m)return;
+  S.selectedId=id;
+  const bdWrap=document.getElementById('modal-bd-wrap');
+  if(m.backdrop||m.portada){bdWrap.innerHTML=`<img class="modal-bd" src="${m.backdrop||m.portada}" alt="" onerror="this.parentElement.innerHTML='<div class=no-bd-fallback></div>'"><div class="modal-bd-grad"></div>`;}
+  else bdWrap.innerHTML=`<div class="no-bd-fallback"></div>`;
+  document.getElementById('modal-poster-el').innerHTML=m.portada?`<img class="modal-poster" src="${m.portada}" alt="">`:`<div class="modal-poster-placeholder">🎬</div>`;
+  document.getElementById('m-title').textContent=m.titulo;
+  document.getElementById('m-orig').textContent=(m.titulo_orig&&m.titulo_orig!==m.titulo)?m.titulo_orig:'';
+  document.getElementById('m-meta').textContent=[m.ano,m.director].filter(Boolean).join(' · ');
+  const loc=[m.estante&&`Estante ${m.estante}`,m.repisa&&`Repisa ${m.repisa}`].filter(Boolean).join(' — ');
+  const chips=[
+    {t:m.formato,hi:true},
+    {t:`Región ${m.region}`},
+    ...(loc?[{t:`📦 ${loc}`,loc:true}]:[]),
+    ...(m.genero?m.genero.split(',').slice(0,3).map(g=>({t:g.trim()})):[]),
+    ...(m.rating?[{t:'★'.repeat(m.rating)}]:[]),
+  ].filter(c=>c.t);
+  document.getElementById('m-chips').innerHTML=chips.map(c=>`<span class="i-chip${c.hi?' hi':c.loc?' loc':''}">${esc(c.t)}</span>`).join('');
+  document.getElementById('m-synopsis').textContent=m.sinopsis||'Sin sinopsis disponible.';
+  if(m.reparto){document.getElementById('m-cast').textContent=m.reparto;document.getElementById('m-cast-sec').style.display='block';}
+  else document.getElementById('m-cast-sec').style.display='none';
+  if(m.notas){document.getElementById('m-notes').textContent=m.notas;document.getElementById('m-notes-sec').style.display='block';}
+  else document.getElementById('m-notes-sec').style.display='none';
+  document.getElementById('modal-wrap').classList.add('open');
+}
+function closeModalOutside(e){if(e.target===document.getElementById('modal-wrap'))document.getElementById('modal-wrap').classList.remove('open');}
+function editMovie(){
+  const m=S.movies.find(x=>x.id===S.selectedId);if(!m)return;
+  document.getElementById('modal-wrap').classList.remove('open');
+  S.pending={...m};S.format=m.formato||'DVD';S.region=String(m.region||'1');S.rating=m.rating||0;
+  populateForm(m);document.getElementById('add-title').textContent='EDITAR';showScreen('add');
+}
+function deleteMovie(){
+  if(!confirm('¿Eliminar esta película?'))return;
+  S.movies=S.movies.filter(x=>x.id!==S.selectedId);
+  saveLoc();filterCol();document.getElementById('modal-wrap').classList.remove('open');
+  toast('Película eliminada');if(S.gas)syncUp(true);
+}
+
+/* ── Scanner ── */
+let reader=null;
+async function startScan(){
+  showScreen('scanner');
+  document.getElementById('scan-status').textContent='Iniciando cámara…';
+  try{
+    if(!reader)reader=new ZXing.BrowserMultiFormatReader();
+    const devices=await reader.listVideoInputDevices();
+    const back=devices.find(d=>/back|rear|environment/i.test(d.label))||devices[devices.length-1];
+    document.getElementById('scan-status').textContent='Apunta al código de barras…';
+    await reader.decodeFromVideoDevice(back?.deviceId,'scanner-video',async(result,err)=>{
+      if(result){
+        reader.reset();
+        document.getElementById('scan-status').textContent='✓ Código detectado';
+        await lookupUPC(result.getText());
+      }
+    });
+  }catch(e){toast('Error de cámara');stopScan();}
+}
+function stopScan(){if(reader)reader.reset();document.getElementById('screen-scanner').style.display='none';}
+
+async function lookupUPC(upc){
+  document.getElementById('screen-scanner').style.display='none';
+  showScreen('search');toast(`Buscando código…`);
+  let title='';
+  try{
+    const r=await fetch(`https://api.upcitemdb.com/prod/trial/lookup?upc=${upc}`);
+    const d=await r.json();
+    if(d.items?.[0]?.title)title=d.items[0].title.replace(/\b(dvd|blu.?ray|4k|uhd|region \d|widescreen|fullscreen|special edition|collector|bilingual|subtitulada?)\b/gi,'').replace(/\(?\d{4}\)?/g,'').replace(/\s+/g,' ').trim();
+  }catch(_){}
+  document.getElementById('tmdb-q').value=title;
+  if(title)await doSearch(title);
+  else{toast('No se identificó — ingresa el título');document.getElementById('tmdb-q').focus();}
+}
+
+/* ── TMDB ── */
+async function doSearch(override){
+  const q=typeof override==='string'?override:document.getElementById('tmdb-q').value.trim();
+  if(!q){toast('Escribe el título');return;}
+  if(!S.tmdb){toast('Configura tu TMDB API Key');showScreen('settings');return;}
+  const el=document.getElementById('results');
+  el.innerHTML='<div class="spinner"></div>';
+  try{
+    let res=await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${S.tmdb}&query=${enc(q)}&language=es-MX&include_adult=false`);
+    let data=await res.json();
+    if(!data.results?.length){res=await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${S.tmdb}&query=${enc(q)}&include_adult=false`);data=await res.json();}
+    renderResults(data.results||[]);
+  }catch(e){el.innerHTML=`<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-h">Error</div><div class="empty-p">Verifica tu API Key e internet</div></div>`;}
+}
+function renderResults(list){
+  const el=document.getElementById('results');
+  if(!list.length){el.innerHTML=`<div class="empty-state"><div class="empty-icon">🎭</div><div class="empty-h">Sin resultados</div><div class="empty-p">Prueba con el título en inglés</div></div>`;return;}
+  el.innerHTML=list.slice(0,25).map(r=>{
+    const year=r.release_date?.slice(0,4)||'';
+    const thumb=r.poster_path?`<img class="result-thumb" src="https://image.tmdb.org/t/p/w92${r.poster_path}" alt="" loading="lazy">`:`<div class="result-thumb" style="display:flex;align-items:center;justify-content:center;font-size:22px">🎬</div>`;
+    return `<div class="result-item" onclick="selectMovie(${r.id})">${thumb}<div class="result-info"><div class="result-title">${esc(r.title)}</div>${r.original_title!==r.title?`<div class="result-sub italic">${esc(r.original_title)}</div>`:''}<div class="result-sub">${year}${r.vote_average?` · ★ ${r.vote_average.toFixed(1)}`:''}</div><div class="result-desc">${esc(r.overview||'')}</div></div><div class="result-arrow"><svg width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg></div></div>`;
+  }).join('');
+}
+async function selectMovie(tmdbId){
+  toast('Cargando información…');
+  try{
+    const[dr,cr]=await Promise.all([
+      fetch(`https://api.themoviedb.org/3/movie/${tmdbId}?api_key=${S.tmdb}&language=es-MX`),
+      fetch(`https://api.themoviedb.org/3/movie/${tmdbId}/credits?api_key=${S.tmdb}&language=es-MX`),
+    ]);
+    const d=await dr.json(),c=await cr.json();
+    S.pending={id:uid(),tmdb_id:tmdbId,titulo:d.title||'',titulo_orig:d.original_title||'',ano:d.release_date?.slice(0,4)||'',director:c.crew?.find(x=>x.job==='Director')?.name||'',reparto:c.cast?.slice(0,5).map(x=>x.name).join(', ')||'',genero:d.genres?.map(x=>x.name).join(', ')||'',sinopsis:d.overview||'',portada:d.poster_path?`https://image.tmdb.org/t/p/w342${d.poster_path}`:'',backdrop:d.backdrop_path?`https://image.tmdb.org/t/p/w780${d.backdrop_path}`:'',formato:'DVD',region:'1',rating:0,estante:'',repisa:'',notas:'',fecha:new Date().toISOString()};
+    S.format='DVD';S.region='1';S.rating=0;populateForm(S.pending);
+    document.getElementById('add-title').textContent='AGREGAR';showScreen('add');
+  }catch(e){toast('Error al cargar. Intenta de nuevo.');}
+}
+
+/* ── Form ── */
+function populateForm(m){
+  const p=document.getElementById('f-poster'),ph=document.getElementById('f-poster-ph');
+  if(m.portada){p.src=m.portada;p.style.display='block';ph.style.display='none';}
+  else{p.style.display='none';ph.style.display='flex';}
+  document.getElementById('f-title').textContent=m.titulo;
+  document.getElementById('f-orig').textContent=(m.titulo_orig&&m.titulo_orig!==m.titulo)?m.titulo_orig:'';
+  document.getElementById('f-meta').textContent=[m.ano,m.director].filter(Boolean).join(' · ');
+  document.getElementById('f-genres').innerHTML=(m.genero||'').split(',').filter(g=>g.trim()).map(g=>`<span class="g-tag">${esc(g.trim())}</span>`).join('');
+  document.getElementById('f-estante').value=m.estante||'';
+  document.getElementById('f-repisa').value=m.repisa||'';
+  document.getElementById('f-notas').value=m.notas||'';
+  document.querySelectorAll('#grp-format .btn-opt').forEach(b=>b.classList.toggle('sel',b.dataset.v===(m.formato||'DVD')));S.format=m.formato||'DVD';
+  document.querySelectorAll('#grp-region .btn-opt').forEach(b=>b.classList.toggle('sel',b.dataset.v===String(m.region||'1')));S.region=String(m.region||'1');
+  S.rating=m.rating||0;updateStars();
+}
+function pick(type,btn){btn.parentElement.querySelectorAll('.btn-opt').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');if(type==='format')S.format=btn.dataset.v;if(type==='region')S.region=btn.dataset.v;}
+function rate(n){S.rating=S.rating===n?0:n;updateStars();}
+function updateStars(){document.querySelectorAll('#stars .star').forEach(s=>s.classList.toggle('on',parseInt(s.dataset.v)<=S.rating));}
+function saveMovie(){
+  if(!S.pending)return;
+  const m={...S.pending,formato:S.format,region:S.region,rating:S.rating,estante:document.getElementById('f-estante').value.trim(),repisa:document.getElementById('f-repisa').value.trim(),notas:document.getElementById('f-notas').value.trim()};
+  const idx=S.movies.findIndex(x=>x.id===m.id);
+  if(idx>=0)S.movies[idx]=m;else S.movies.unshift(m);
+  saveLoc();filterCol();showScreen('collection');toast(`"${m.titulo}" guardada ✓`);S.pending=null;S.selectedId=null;
+  if(S.gas)syncUp(true);
+}
+
+/* ── Cloud ── */
+async function syncDown(silent=false){
+  if(!S.gas){if(!silent)toast('Configura la URL del backend primero');return;}
+  if(!silent)toast('Descargando desde la nube…');
+  try{const r=await fetch(S.gas,{redirect:'follow'});const movies=await r.json();if(Array.isArray(movies)&&movies.length){S.movies=movies;saveLoc();filterCol();if(!silent)toast(`✓ ${movies.length} películas sincronizadas`);}else if(!silent)toast('La hoja aún no tiene datos');}
+  catch(e){if(!silent)toast('Error de sincronización');}
+}
+async function syncUp(silent=false){
+  if(!S.gas){if(!silent)toast('Configura la URL del backend primero');return;}
+  if(!silent)toast('Subiendo a la nube…');
+  try{await fetch(S.gas,{method:'POST',redirect:'follow',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'replace_all',data:S.movies})});if(!silent)toast('✓ Guardado en Google Sheets');}
+  catch(e){if(!silent)toast('Error al subir');}
+}
+
+/* ── Settings ── */
+function guardarConfig(){S.tmdb=document.getElementById('cfg-tmdb').value.trim();S.gas=document.getElementById('cfg-gas').value.trim();localStorage.setItem('cv_tmdb',S.tmdb);localStorage.setItem('cv_gas',S.gas);toast('✓ Configuración guardada');}
+function updateStats(){document.getElementById('st-total').textContent=S.movies.length;document.getElementById('st-dvd').textContent=S.movies.filter(m=>m.formato==='DVD').length;document.getElementById('st-br').textContent=S.movies.filter(m=>m.formato!=='DVD').length;}
+function exportCSV(){const cols=['titulo','titulo_orig','ano','director','reparto','genero','formato','region','estante','repisa','rating','notas'];const rows=[cols.join(','),...S.movies.map(m=>cols.map(c=>`"${String(m[c]||'').replace(/"/g,'""')}"`).join(','))];const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob([rows.join('\n')],{type:'text/csv'})),download:'cinevault.csv'});a.click();toast('CSV exportado');}
+
+/* ── Utils ── */
+function saveLoc(){localStorage.setItem('cv_movies',JSON.stringify(S.movies));}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,7);}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function enc(s){return encodeURIComponent(s);}
+let toastTimer;
+function toast(msg,dur=3000){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),dur);}
+</script>
+</body>
+</html>
