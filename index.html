@@ -223,7 +223,8 @@
     .modal-bd-grad { position:absolute; inset:0; background:linear-gradient(to bottom,transparent 20%,var(--bg2) 100%); }
     .no-bd-fallback { height:72px; background:linear-gradient(to bottom,var(--surface),var(--bg2)); }
     .modal-poster-row { display:flex; gap:14px; padding:0 14px; margin-top:-52px; position:relative; z-index:1; flex-shrink:0; }
-    .modal-poster { width:84px; height:126px; border-radius:10px; object-fit:cover; box-shadow:0 8px 28px rgba(0,0,0,.6); flex-shrink:0; }
+    .modal-poster { width:84px; height:126px; border-radius:10px; object-fit:cover; box-shadow:0 8px 28px rgba(0,0,0,.6); flex-shrink:0; cursor:zoom-in; transition:all .3s cubic-bezier(.4,0,.2,1); }
+    .modal-poster.expanded { width:180px; height:270px; border-radius:14px; cursor:zoom-out; box-shadow:0 16px 48px rgba(0,0,0,.8); }
     .modal-poster-placeholder { width:84px; height:126px; border-radius:10px; background:var(--surface); display:flex; align-items:center; justify-content:center; font-size:30px; flex-shrink:0; box-shadow:0 8px 28px rgba(0,0,0,.4); }
     .modal-titles { flex:1; padding-top:56px; min-width:0; }
     .modal-title  { font-size:18px; font-weight:700; line-height:1.2; }
@@ -506,7 +507,21 @@
         </div>
       </div>
       <div class="modal-body">
-        <div class="chips-row" id="m-chips"></div>
+        <!-- Dir + Tipo -->
+        <div id="m-director-row" style="margin-bottom:10px;display:none">
+          <div id="m-director-name" style="font-size:14px;font-weight:600;color:var(--text)"></div>
+          <div id="m-tipo-lbl" style="font-size:12px;color:var(--muted);margin-top:1px"></div>
+        </div>
+        <!-- Formato + Region + Edicion -->
+        <div class="chips-row" id="m-fmt-chips" style="margin-bottom:4px"></div>
+        <!-- Géneros separados -->
+        <div style="height:1px;background:var(--border);margin:8px 0"></div>
+        <div class="chips-row" id="m-genre-chips"></div>
+        <!-- Ubicacion -->
+        <div id="m-loc-row" style="display:none;margin-bottom:8px">
+          <span id="m-loc-txt" style="font-size:12px;color:var(--muted)">📦 </span>
+        </div>
+        <div style="height:1px;background:var(--border);margin:8px 0"></div>
         <div class="sec-lbl">Sinopsis</div>
         <div class="synopsis" id="m-synopsis"></div>
         <div id="m-cast-sec" style="display:none"><div class="sec-lbl">Reparto</div><div class="synopsis" id="m-cast"></div></div>
@@ -516,9 +531,16 @@
         </div>
         <div id="m-notes-sec" style="display:none"><div class="sec-lbl">Notas</div><div class="synopsis" id="m-notes"></div></div>
       </div>
-      <div class="modal-actions">
-        <button class="btn-edit-m" onclick="editMovie()">✏️ Editar</button>
-        <button class="btn-del"    onclick="deleteMovie()"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
+      <div class="modal-actions" style="justify-content:space-between">
+        <button class="btn-del" onclick="document.getElementById('modal-wrap').classList.remove('open')" style="background:var(--surface);border-color:var(--border2);color:var(--text2)">
+          <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><path d="M19 12H5M12 5l-7 7 7 7"/></svg>
+        </button>
+        <div style="display:flex;gap:8px">
+          <button class="btn-del" onclick="editMovie()" style="background:var(--surface);border-color:var(--border2);color:var(--text)">
+            <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          </button>
+          <button class="btn-del" onclick="deleteMovie()"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
+        </div>
       </div>
     </div>
   </div>
@@ -661,7 +683,7 @@ function renderList(list) {
       ${thumb}
       <div class="list-info">
         <div class="list-title">${esc(m.titulo)}</div>
-        <div class="list-director">${esc(m.director||'—')}</div>
+        <div class="list-director">${m.director?'Dir. '+esc(m.director):'—'}</div>
         <div class="list-meta">
           <span class="list-year">${m.ano||''}</span>
           ${loc?`<span class="list-sep"></span><span class="list-loc">📦 ${esc(loc)}</span>`:''}
@@ -688,10 +710,10 @@ function openDetail(id) {
   const bdWrap=document.getElementById('modal-bd-wrap');
   if(m.backdrop||m.portada){bdWrap.innerHTML=`<img class="modal-bd" src="${m.backdrop||m.portada}" alt="" onerror="this.parentElement.innerHTML='<div class=no-bd-fallback></div>'"><div class="modal-bd-grad"></div>`;}
   else bdWrap.innerHTML=`<div class="no-bd-fallback"></div>`;
-  document.getElementById('modal-poster-el').innerHTML=m.portada?`<img class="modal-poster" src="${m.portada}" alt="">`:`<div class="modal-poster-placeholder">🎬</div>`;
+  document.getElementById('modal-poster-el').innerHTML=m.portada?`<img class="modal-poster" src="${m.portada}" alt="" onclick="togglePoster(this)">`:`<div class="modal-poster-placeholder">🎬</div>`;
   document.getElementById('m-title').textContent=m.titulo;
   document.getElementById('m-orig').textContent=(m.titulo_orig&&m.titulo_orig!==m.titulo)?m.titulo_orig:'';
-  document.getElementById('m-meta').textContent=[m.ano,m.director].filter(Boolean).join(' · ');
+  document.getElementById('m-meta').textContent=m.ano||'';
   const loc=[m.estante&&`Estante ${m.estante}`,m.repisa&&`Repisa ${m.repisa}`].filter(Boolean).join(' — ');
   const chips=[
     {t:m.formato,hi:true},
@@ -875,6 +897,7 @@ function updateStats(){document.getElementById('st-total').textContent=S.movies.
 function exportCSV(){const cols=['titulo','titulo_orig','ano','director','reparto','guionista','dop','genero','duracion','ratio','formato','region','tipo','edicion','estante','repisa','rating','notas'];const rows=[cols.join(','),...S.movies.map(m=>cols.map(c=>`"${String(m[c]||'').replace(/"/g,'""')}"`).join(','))];const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob([rows.join('\n')],{type:'text/csv'})),download:'filmingtopia.csv'});a.click();toast('CSV exportado');}
 
 /* ── Utils ── */
+function togglePoster(el){el.classList.toggle('expanded');}
 function changePoster(){
   const url=prompt('URL de la nueva portada:');
   if(url&&url.trim()){
