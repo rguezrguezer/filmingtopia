@@ -2,7 +2,7 @@
   "name": "Filmingtopia",
   "short_name": "Filmingtopia",
   "description": "Tu filmoteca personal de DVDs y Blu-rays",
-  "start_url": "/index.html",
+  "start_url": "/filmingtopia/",
   "display": "standalone",
   "background_color": "#0D1B2A",
   "theme_color": "#0D1B2A",
