@@ -3,9 +3,10 @@
   "short_name": "Filmingtopia",
   "description": "Tu filmoteca personal de DVDs y Blu-rays",
   "start_url": "/filmingtopia/",
+  "scope": "/filmingtopia/",
   "display": "standalone",
-  "background_color": "#0D1B2A",
-  "theme_color": "#0D1B2A",
+  "background_color": "#080C12",
+  "theme_color": "#080C12",
   "orientation": "portrait-primary",
   "lang": "es",
   "icons": [
