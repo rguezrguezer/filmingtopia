@@ -102,6 +102,10 @@
     .fmt-dvd { background: rgba(30,58,95,.85); color: #93C5FD; }
     .fmt-br  { background: rgba(26,58,107,.85); color: #BAE6FD; }
     .fmt-4k  { background: rgba(45,27,105,.85); color: #C4B5FD; }
+    .fmt-dig { background: rgba(30,80,60,.85); color: #6EE7B7; }
+    .ed-badge { position: absolute; top: 24px; left: 5px; font-size: 8px; font-weight: 700; padding: 2px 6px; border-radius: 4px; letter-spacing: .5px; backdrop-filter: blur(8px); }
+    .ed-r   { background: rgba(20,100,40,.85); color: #86EFAC; }
+    .ed-esp { background: rgba(160,80,0,.85);  color: #FCD34D; }
 
     /* ── LIST ── */
     .movie-list { flex: 1; overflow-y: auto; scrollbar-width: none; }
@@ -381,7 +385,15 @@
       </div>
       <div class="fsec">
         <div class="flabel">Edición</div>
-        <input class="finput" id="f-edicion" placeholder="Edición del Director, Coleccionista, Trilogía…" type="text">
+        <div class="btn-grp" id="grp-edicion" style="flex-wrap:wrap;gap:6px;">
+          <button class="btn-opt sel" data-v="R"        onclick="pickEd(this)" style="flex:1 1 calc(20% - 5px);min-width:50px">R</button>
+          <button class="btn-opt"     data-v="ESP"      onclick="pickEd(this)" style="flex:1 1 calc(20% - 5px);min-width:50px">ESP</button>
+          <button class="btn-opt"     data-v="ESP 2CDs" onclick="pickEd(this)" style="flex:1 1 calc(20% - 5px);min-width:50px">ESP 2</button>
+          <button class="btn-opt"     data-v="ESP 3CDs" onclick="pickEd(this)" style="flex:1 1 calc(20% - 5px);min-width:50px">ESP 3</button>
+          <button class="btn-opt"     data-v="ESP 4CDs" onclick="pickEd(this)" style="flex:1 1 calc(20% - 5px);min-width:50px">ESP 4</button>
+        </div>
+        <input class="finput" id="f-edicion-extra" placeholder="Detalle adicional (opcional): Director's Cut, Aniversario…" type="text" style="margin-top:7px" oninput="updateEdicionHidden()">
+        <input type="hidden" id="f-edicion">
       </div>
       <div class="fsec">
         <div class="flabel">Duración</div>
@@ -546,7 +558,7 @@ const S = {
   view: localStorage.getItem('cv_view')||'grid',
   screen:'collection', prev:'collection',
   pending:null, selectedId:null,
-  format:'DVD', region:'1', tipo:'Película', rating:0,
+  format:'DVD', region:'1', tipo:'Película', edicion:'R', rating:0,
   tmdb: localStorage.getItem('cv_tmdb')||'',
   gas:  localStorage.getItem('cv_gas') ||'',
 };
@@ -623,8 +635,12 @@ function renderGrid(list) {
   if(!list.length){g.innerHTML=emptyHTML(S.movies.length===0);return;}
   g.innerHTML=list.map(m=>{
     const img=m.portada?`<img src="${m.portada}" alt="" loading="lazy" onerror="this.outerHTML='<div class=card-noposter><div class=card-noposter-icon>🎬</div></div>'">`:`<div class="card-noposter"><div class="card-noposter-icon">🎬</div><div class="card-noposter-title">${esc(m.titulo)}</div></div>`;
-    const badge=m.formato==='4K UHD'?'<span class="fmt-badge fmt-4k">4K</span>':m.formato==='Blu-ray'?'<span class="fmt-badge fmt-br">BD</span>':'<span class="fmt-badge fmt-dvd">DVD</span>';
-    return `<div class="card" onclick="openDetail('${m.id}')">${img}${badge}<div class="card-overlay"><div class="card-title">${esc(m.titulo)}</div><div class="card-year">${m.ano||''}</div></div></div>`;
+    const fmtLabel=m.formato==='4K UHD'?'4K':m.formato==='Blu-ray'?'BD':m.formato==='Digital'?'DIG':'DVD';
+    const fmtCls=m.formato==='4K UHD'?'fmt-4k':m.formato==='Blu-ray'?'fmt-br':m.formato==='Digital'?'fmt-dig':'fmt-dvd';
+    const badge=`<span class="fmt-badge ${fmtCls}">${fmtLabel}</span>`;
+    const isEsp=m.edicion&&m.edicion.toString().toUpperCase().startsWith('ESP');
+    const edBadge=isEsp?'<span class="ed-badge ed-esp">ESP</span>':'<span class="ed-badge ed-r">R</span>';
+    return `<div class="card" onclick="openDetail('${m.id}')">${img}${badge}${edBadge}<div class="card-overlay"><div class="card-title">${esc(m.titulo)}</div><div class="card-year">${m.ano||''}</div></div></div>`;
   }).join('');
 }
 
@@ -802,7 +818,12 @@ function populateForm(m){
   document.querySelectorAll('#grp-format .btn-opt').forEach(b=>b.classList.toggle('sel',b.dataset.v===(m.formato||'DVD')));S.format=m.formato||'DVD';
   document.querySelectorAll('#grp-region .btn-opt').forEach(b=>b.classList.toggle('sel',b.dataset.v===String(m.region||'1')));S.region=String(m.region||'1');
   document.querySelectorAll('#grp-tipo .btn-opt').forEach(b=>b.classList.toggle('sel',b.dataset.v===(m.tipo||'Película')));S.tipo=m.tipo||'Película';
-  document.getElementById('f-edicion').value=m.edicion||'';
+  const edBase=(m.edicion||'R').split(' — ')[0].trim();
+  const edExtra=(m.edicion||'').includes(' — ')?(m.edicion||'').split(' — ').slice(1).join(' — '):'';
+  document.querySelectorAll('#grp-edicion .btn-opt').forEach(b=>{b.classList.toggle('sel',b.dataset.v===edBase);});
+  S.edicion=edBase;
+  document.getElementById('f-edicion-extra').value=edExtra;
+  document.getElementById('f-edicion').value=m.edicion||'R';
   document.getElementById('f-duracion').value=m.duracion||'';
   document.getElementById('f-guionista').value=m.guionista||'';
   document.getElementById('f-dop').value=m.dop||'';
@@ -810,11 +831,13 @@ function populateForm(m){
   S.rating=m.rating||0;updateStars();
 }
 function pick(type,btn){btn.parentElement.querySelectorAll('.btn-opt').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');if(type==='format')S.format=btn.dataset.v;if(type==='region')S.region=btn.dataset.v;if(type==='tipo')S.tipo=btn.dataset.v;}
+function pickEd(btn){document.querySelectorAll('#grp-edicion .btn-opt').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');S.edicion=btn.dataset.v;updateEdicionHidden();}
+function updateEdicionHidden(){const base=S.edicion||'R';const extra=document.getElementById('f-edicion-extra').value.trim();document.getElementById('f-edicion').value=extra?`${base} — ${extra}`:base;}
 function rate(n){S.rating=S.rating===n?0:n;updateStars();}
 function updateStars(){document.querySelectorAll('#stars .star').forEach(s=>s.classList.toggle('on',parseInt(s.dataset.v)<=S.rating));}
 function saveMovie(){
   if(!S.pending)return;
-  const m={...S.pending,titulo:document.getElementById('f-title').value.trim()||S.pending.titulo,formato:S.format,region:S.region,tipo:S.tipo,rating:S.rating,edicion:document.getElementById('f-edicion').value.trim(),duracion:document.getElementById('f-duracion').value.trim(),guionista:document.getElementById('f-guionista').value.trim(),dop:document.getElementById('f-dop').value.trim(),ratio:document.getElementById('f-ratio').value.trim(),estante:document.getElementById('f-estante').value.trim(),repisa:document.getElementById('f-repisa').value.trim(),notas:document.getElementById('f-notas').value.trim()};
+  const m={...S.pending,titulo:document.getElementById('f-title').value.trim()||S.pending.titulo,formato:S.format,region:S.region,tipo:S.tipo,rating:S.rating,edicion:(()=>{updateEdicionHidden();return document.getElementById('f-edicion').value.trim();})(),duracion:document.getElementById('f-duracion').value.trim(),guionista:document.getElementById('f-guionista').value.trim(),dop:document.getElementById('f-dop').value.trim(),ratio:document.getElementById('f-ratio').value.trim(),estante:document.getElementById('f-estante').value.trim(),repisa:document.getElementById('f-repisa').value.trim(),notas:document.getElementById('f-notas').value.trim()};
   const idx=S.movies.findIndex(x=>x.id===m.id);
   if(idx>=0)S.movies[idx]=m;else S.movies.unshift(m);
   saveLoc();filterCol();showScreen('collection');toast(`"${m.titulo}" guardada ✓`);S.pending=null;S.selectedId=null;
