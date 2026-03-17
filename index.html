@@ -806,11 +806,32 @@ async function lookupUPC(upc){
 
 /* ── TMDB ── */
 async function doSearch(override){
-  const q=typeof override==='string'?override:document.getElementById('tmdb-q').value.trim();
+  let q=typeof override==='string'?override:document.getElementById('tmdb-q').value.trim();
   if(!q){toast('Escribe el título');return;}
   if(!S.tmdb){toast('Configura tu TMDB API Key');showScreen('settings');return;}
   const el=document.getElementById('results');
   el.innerHTML='<div class="spinner"></div>';
+  // Si es solo números y más de 4 dígitos → tratar como código de barras
+  if(/^\d{5,}$/.test(q)){
+    toast('Buscando código '+q+'…');
+    try{
+      const r=await fetch(`https://api.upcitemdb.com/prod/trial/lookup?upc=${q}`);
+      const d=await r.json();
+      if(d.items?.[0]?.title){
+        q=d.items[0].title
+          .replace(/\b(dvd|blu.?ray|4k|uhd|region \d|widescreen|fullscreen|special edition|collector|bilingual|subtitulada?)\b/gi,'')
+          .replace(/\(?\d{4}\)?/g,'').replace(/\s+/g,' ').trim();
+        document.getElementById('tmdb-q').value=q;
+        toast('Título encontrado: '+q);
+      } else {
+        el.innerHTML=`<div class="empty-state"><div class="empty-icon">🔍</div><div class="empty-h">Código no encontrado</div><div class="empty-p">Intenta con el título de la película</div></div>`;
+        return;
+      }
+    }catch(e){
+      el.innerHTML=`<div class="empty-state"><div class="empty-icon">⚠️</div><div class="empty-h">Error de conexión</div><div class="empty-p">Verifica tu internet</div></div>`;
+      return;
+    }
+  }
   try{
     let res=await fetch(`https://api.themoviedb.org/3/search/movie?api_key=${S.tmdb}&query=${enc(q)}&language=es-MX&include_adult=false`);
     let data=await res.json();
