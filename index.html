@@ -230,6 +230,7 @@
     .i-chip { padding:4px 12px; border-radius:20px; border:1px solid var(--border2); font-size:12px; color:var(--text2); background:var(--surface); }
     .i-chip.hi  { border-color:var(--accent); color:var(--accent); background:var(--accent-lo); }
     .i-chip.loc { border-color:rgba(100,180,120,.4); color:#86EFAC; background:rgba(100,180,120,.08); }
+    .i-chip.ed  { border-color:rgba(180,130,220,.4); color:#D8B4FE; background:rgba(180,130,220,.08); }
     .sec-lbl { font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:1px; color:var(--muted); margin-bottom:6px; margin-top:14px; }
     .synopsis { font-size:13.5px; line-height:1.7; color:var(--text2); }
     .modal-actions { display:flex; gap:9px; padding:13px 14px; padding-bottom:calc(13px + env(safe-area-inset-bottom)); border-top:1px solid var(--border); flex-shrink:0; }
@@ -276,10 +277,16 @@
       </div>
     </header>
     <div class="chips-bar" id="filter-chips">
-      <button class="chip active" data-f="">Todo</button>
-      <button class="chip" data-f="DVD">DVD</button>
-      <button class="chip" data-f="Blu-ray">Blu-ray</button>
-      <button class="chip" data-f="4K UHD">4K UHD</button>
+      <button class="chip active" data-f="" data-cat="all">Todo</button>
+      <button class="chip" data-f="DVD" data-cat="fmt">DVD</button>
+      <button class="chip" data-f="Blu-ray" data-cat="fmt">Blu-ray</button>
+      <button class="chip" data-f="4K UHD" data-cat="fmt">4K UHD</button>
+      <button class="chip" data-f="Digital" data-cat="fmt">Digital</button>
+      <span style="width:1px;background:var(--border2);flex-shrink:0;margin:4px 2px"></span>
+      <button class="chip" data-f="Película" data-cat="tipo">Película</button>
+      <button class="chip" data-f="Documental" data-cat="tipo">Documental</button>
+      <button class="chip" data-f="Serie" data-cat="tipo">Serie</button>
+      <button class="chip" data-f="Live Show" data-cat="tipo">Live Show</button>
       <div style="margin-left:auto;flex-shrink:0;">
         <div class="view-toggle">
           <button class="vt-btn active" id="vt-grid" onclick="setView('grid')" title="Cuadrícula">
@@ -328,10 +335,13 @@
     </div>
     <div class="form-scroll">
       <div class="movie-preview">
-        <img id="f-poster" class="preview-poster" src="" alt="" style="display:none">
-        <div id="f-poster-ph" class="preview-poster" style="display:flex;align-items:center;justify-content:center;font-size:28px;background:var(--surface2)">🎬</div>
+        <div style="position:relative;flex-shrink:0;">
+          <img id="f-poster" class="preview-poster" src="" alt="" style="display:none">
+          <div id="f-poster-ph" class="preview-poster" style="display:flex;align-items:center;justify-content:center;font-size:28px;background:var(--surface2)">🎬</div>
+          <button onclick="changePoster()" style="position:absolute;bottom:3px;right:3px;background:rgba(0,0,0,.7);border:none;border-radius:4px;padding:3px 5px;cursor:pointer;font-size:9px;color:var(--accent)">✏️</button>
+        </div>
         <div class="preview-info">
-          <div class="preview-title" id="f-title"></div>
+          <input class="finput" id="f-title" placeholder="Título…" style="font-size:14px;font-weight:700;margin-bottom:5px;height:38px">
           <div class="preview-orig"  id="f-orig"></div>
           <div class="preview-meta"  id="f-meta"></div>
           <div class="preview-genres" id="f-genres"></div>
@@ -339,10 +349,11 @@
       </div>
       <div class="fsec">
         <div class="flabel">Formato</div>
-        <div class="btn-grp" id="grp-format">
-          <button class="btn-opt sel" data-v="DVD"    onclick="pick('format',this)">DVD</button>
-          <button class="btn-opt"     data-v="Blu-ray" onclick="pick('format',this)">Blu-ray</button>
-          <button class="btn-opt"     data-v="4K UHD"  onclick="pick('format',this)">4K UHD</button>
+        <div class="btn-grp" id="grp-format" style="flex-wrap:wrap;gap:6px;">
+          <button class="btn-opt sel" data-v="DVD"     onclick="pick('format',this)" style="flex:1 1 calc(25% - 5px);min-width:60px">DVD</button>
+          <button class="btn-opt"     data-v="Blu-ray" onclick="pick('format',this)" style="flex:1 1 calc(25% - 5px);min-width:60px">Blu-ray</button>
+          <button class="btn-opt"     data-v="4K UHD"  onclick="pick('format',this)" style="flex:1 1 calc(25% - 5px);min-width:60px">4K UHD</button>
+          <button class="btn-opt"     data-v="Digital" onclick="pick('format',this)" style="flex:1 1 calc(25% - 5px);min-width:60px">Digital</button>
         </div>
       </div>
       <div class="fsec">
@@ -353,6 +364,19 @@
           <button class="btn-opt"     data-v="3" onclick="pick('region',this)">3</button>
           <button class="btn-opt"     data-v="4" onclick="pick('region',this)">4</button>
         </div>
+      </div>
+      <div class="fsec">
+        <div class="flabel">Tipo de contenido</div>
+        <div class="btn-grp" id="grp-tipo" style="flex-wrap:wrap;gap:6px;">
+          <button class="btn-opt sel" data-v="Película"   onclick="pick('tipo',this)" style="flex:1 1 calc(25% - 5px);min-width:70px">Película</button>
+          <button class="btn-opt"     data-v="Documental" onclick="pick('tipo',this)" style="flex:1 1 calc(25% - 5px);min-width:70px">Documental</button>
+          <button class="btn-opt"     data-v="Serie"      onclick="pick('tipo',this)" style="flex:1 1 calc(25% - 5px);min-width:70px">Serie</button>
+          <button class="btn-opt"     data-v="Live Show"  onclick="pick('tipo',this)" style="flex:1 1 calc(25% - 5px);min-width:70px">Live Show</button>
+        </div>
+      </div>
+      <div class="fsec">
+        <div class="flabel">Edición</div>
+        <input class="finput" id="f-edicion" placeholder="Edición del Director, Coleccionista, Trilogía…" type="text">
       </div>
       <div class="fsec">
         <div class="flabel">Ubicación Física</div>
@@ -497,7 +521,7 @@ const S = {
   view: localStorage.getItem('cv_view')||'grid',
   screen:'collection', prev:'collection',
   pending:null, selectedId:null,
-  format:'DVD', region:'1', rating:0,
+  format:'DVD', region:'1', tipo:'Película', rating:0,
   tmdb: localStorage.getItem('cv_tmdb')||'',
   gas:  localStorage.getItem('cv_gas') ||'',
 };
@@ -515,6 +539,7 @@ document.addEventListener('DOMContentLoaded', () => {
       document.querySelectorAll('#filter-chips .chip').forEach(x => x.classList.remove('active'));
       c.classList.add('active');
       S.activeFilter = c.dataset.f;
+      S.activeCat = c.dataset.cat||'all';
       filterCol();
     });
   });
@@ -551,7 +576,10 @@ function filterCol() {
   S.query = q;
   const list = S.movies.filter(m=>{
     const mq=!q||m.titulo.toLowerCase().includes(q)||(m.director||'').toLowerCase().includes(q)||(m.genero||'').toLowerCase().includes(q);
-    const mf=!S.activeFilter||m.formato===S.activeFilter;
+    const chip=document.querySelector('#filter-chips .chip.active');
+    const cat=chip?.dataset.cat||'all';
+    const val=chip?.dataset.f||'';
+    const mf=cat==='all'||(cat==='fmt'&&m.formato===val)||(cat==='tipo'&&(m.tipo||'Película')===val);
     return mq&&mf;
   });
   S.filtered=list;
@@ -622,7 +650,9 @@ function openDetail(id) {
   const loc=[m.estante&&`Estante ${m.estante}`,m.repisa&&`Repisa ${m.repisa}`].filter(Boolean).join(' — ');
   const chips=[
     {t:m.formato,hi:true},
+    {t:m.tipo||'Película'},
     {t:`Región ${m.region}`},
+    ...(m.edicion?[{t:m.edicion,ed:true}]:[]),
     ...(loc?[{t:`📦 ${loc}`,loc:true}]:[]),
     ...(m.genero?m.genero.split(',').slice(0,3).map(g=>({t:g.trim()})):[]),
     ...(m.rating?[{t:'★'.repeat(m.rating)}]:[]),
@@ -726,7 +756,7 @@ function populateForm(m){
   const p=document.getElementById('f-poster'),ph=document.getElementById('f-poster-ph');
   if(m.portada){p.src=m.portada;p.style.display='block';ph.style.display='none';}
   else{p.style.display='none';ph.style.display='flex';}
-  document.getElementById('f-title').textContent=m.titulo;
+  document.getElementById('f-title').value=m.titulo||'';
   document.getElementById('f-orig').textContent=(m.titulo_orig&&m.titulo_orig!==m.titulo)?m.titulo_orig:'';
   document.getElementById('f-meta').textContent=[m.ano,m.director].filter(Boolean).join(' · ');
   document.getElementById('f-genres').innerHTML=(m.genero||'').split(',').filter(g=>g.trim()).map(g=>`<span class="g-tag">${esc(g.trim())}</span>`).join('');
@@ -735,14 +765,16 @@ function populateForm(m){
   document.getElementById('f-notas').value=m.notas||'';
   document.querySelectorAll('#grp-format .btn-opt').forEach(b=>b.classList.toggle('sel',b.dataset.v===(m.formato||'DVD')));S.format=m.formato||'DVD';
   document.querySelectorAll('#grp-region .btn-opt').forEach(b=>b.classList.toggle('sel',b.dataset.v===String(m.region||'1')));S.region=String(m.region||'1');
+  document.querySelectorAll('#grp-tipo .btn-opt').forEach(b=>b.classList.toggle('sel',b.dataset.v===(m.tipo||'Película')));S.tipo=m.tipo||'Película';
+  document.getElementById('f-edicion').value=m.edicion||'';
   S.rating=m.rating||0;updateStars();
 }
-function pick(type,btn){btn.parentElement.querySelectorAll('.btn-opt').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');if(type==='format')S.format=btn.dataset.v;if(type==='region')S.region=btn.dataset.v;}
+function pick(type,btn){btn.parentElement.querySelectorAll('.btn-opt').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');if(type==='format')S.format=btn.dataset.v;if(type==='region')S.region=btn.dataset.v;if(type==='tipo')S.tipo=btn.dataset.v;}
 function rate(n){S.rating=S.rating===n?0:n;updateStars();}
 function updateStars(){document.querySelectorAll('#stars .star').forEach(s=>s.classList.toggle('on',parseInt(s.dataset.v)<=S.rating));}
 function saveMovie(){
   if(!S.pending)return;
-  const m={...S.pending,formato:S.format,region:S.region,rating:S.rating,estante:document.getElementById('f-estante').value.trim(),repisa:document.getElementById('f-repisa').value.trim(),notas:document.getElementById('f-notas').value.trim()};
+  const m={...S.pending,titulo:document.getElementById('f-title').value.trim()||S.pending.titulo,formato:S.format,region:S.region,tipo:S.tipo,rating:S.rating,edicion:document.getElementById('f-edicion').value.trim(),estante:document.getElementById('f-estante').value.trim(),repisa:document.getElementById('f-repisa').value.trim(),notas:document.getElementById('f-notas').value.trim()};
   const idx=S.movies.findIndex(x=>x.id===m.id);
   if(idx>=0)S.movies[idx]=m;else S.movies.unshift(m);
   saveLoc();filterCol();showScreen('collection');toast(`"${m.titulo}" guardada ✓`);S.pending=null;S.selectedId=null;
@@ -769,6 +801,15 @@ function updateStats(){document.getElementById('st-total').textContent=S.movies.
 function exportCSV(){const cols=['titulo','titulo_orig','ano','director','reparto','genero','formato','region','estante','repisa','rating','notas'];const rows=[cols.join(','),...S.movies.map(m=>cols.map(c=>`"${String(m[c]||'').replace(/"/g,'""')}"`).join(','))];const a=Object.assign(document.createElement('a'),{href:URL.createObjectURL(new Blob([rows.join('\n')],{type:'text/csv'})),download:'filmingtopia.csv'});a.click();toast('CSV exportado');}
 
 /* ── Utils ── */
+function changePoster(){
+  const url=prompt('URL de la nueva portada:');
+  if(url&&url.trim()){
+    S.pending=S.pending||{};
+    S.pending.portada=url.trim();
+    const p=document.getElementById('f-poster'),ph=document.getElementById('f-poster-ph');
+    p.src=url.trim();p.style.display='block';ph.style.display='none';
+  }
+}
 function addManual(){
   S.pending=null;
   document.getElementById('tmdb-q').value='';
